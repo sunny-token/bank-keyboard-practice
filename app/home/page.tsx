@@ -164,94 +164,97 @@ export default function BankKeypadPractice() {
   }, [handleKeyDown]);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
+    <div className="min-h-screen bg-gray-50 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             银行数字键盘训练系统
           </h1>
           <p className="text-gray-600">使用物理键盘输入下方显示的数字序列</p>
+        </div>
 
-          <div className="mt-6 flex justify-center space-x-8">
-            <div className="bg-blue-50 rounded-lg p-4 w-32">
-              <p className="text-sm text-blue-600 mb-1">用时</p>
-              <p className="text-2xl font-mono">
-                {(elapsedTime / 1000).toFixed(1)}s
+        <div className="flex gap-8 h-[calc(100vh-12rem)]">
+          {/* 左侧练习区域 */}
+          <div className="flex-1">
+            <div className="flex justify-center space-x-8 mb-8">
+              <div className="bg-blue-50 rounded-lg p-4 w-32">
+                <p className="text-sm text-blue-600 mb-1">用时</p>
+                <p className="text-2xl font-mono">
+                  {(elapsedTime / 1000).toFixed(1)}s
+                </p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-4 w-32">
+                <p className="text-sm text-green-600 mb-1">正确率</p>
+                <p className="text-2xl font-mono">{accuracy}%</p>
+              </div>
+            </div>
+
+            {/* 目标数字显示区 */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-700 mb-4">
+                请输入以下数字(长度：{targetNumber.length})：
+              </h2>
+              <div
+                className="text-4xl font-mono bg-gray-100 p-6 rounded-xl shadow-inner tracking-widest"
+                onClick={() => inputRef.current?.focus()}
+              >
+                {targetNumber.split("").map((char, i) => (
+                  <span key={i} className="inline-block w-12 text-center">
+                    {char}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* 输入反馈区 */}
+            <div
+              className="relative mb-8 min-h-[80px] border-2 border-gray-300 rounded-xl p-6 font-mono text-3xl tracking-widest flex flex-wrap items-center"
+              onClick={() => inputRef.current?.focus()}
+            >
+              {inputValue.split("").map((char, i) => (
+                <span
+                  key={i}
+                  className={`inline-block w-12 text-center ${
+                    charStatus[i] === "correct"
+                      ? "text-green-500"
+                      : "text-red-500 underline"
+                  }`}
+                >
+                  {char}
+                </span>
+              ))}
+
+              {/* 光标 */}
+              {inputValue.length < targetNumber.length && (
+                <span className="ml-1 animate-pulse bg-gray-800 w-2 h-12 inline-block align-middle"></span>
+              )}
+
+              {/* 隐藏的输入框（用于获取物理键盘输入） */}
+              <input
+                ref={inputRef}
+                type="text"
+                className="absolute opacity-0 -z-10"
+                autoFocus
+              />
+            </div>
+
+            {/* 操作提示 */}
+            <div className="bg-yellow-50 rounded-lg p-4">
+              <p className="text-yellow-700 text-center">
+                <span className="font-semibold">操作说明：</span>
+                使用键盘数字键输入 | Backspace删除 | Delete清空 | Enter提交
               </p>
             </div>
-            <div className="bg-green-50 rounded-lg p-4 w-32">
-              <p className="text-sm text-green-600 mb-1">正确率</p>
-              <p className="text-2xl font-mono">{accuracy}%</p>
-            </div>
           </div>
-        </div>
 
-        {/* 目标数字显示区 */}
-        <div className="mb-12">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">
-            请输入以下数字(长度：{targetNumber.length})：
-          </h2>
-          <div
-            className="text-4xl font-mono bg-gray-100 p-6 rounded-xl shadow-inner tracking-widest"
-            onClick={() => inputRef.current?.focus()}
-          >
-            {targetNumber.split("").map((char, i) => (
-              <span key={i} className="inline-block w-12 text-center">
-                {char}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* 输入反馈区 */}
-        <div
-          className="relative mb-12 min-h-[80px] border-2 border-gray-300 rounded-xl p-6 font-mono text-3xl tracking-widest flex flex-wrap items-center"
-          onClick={() => inputRef.current?.focus()}
-        >
-          {inputValue.split("").map((char, i) => (
-            <span
-              key={i}
-              className={`inline-block w-12 text-center ${
-                charStatus[i] === "correct"
-                  ? "text-green-500"
-                  : "text-red-500 underline"
-              }`}
-            >
-              {char}
-            </span>
-          ))}
-
-          {/* 光标 */}
-          {inputValue.length < targetNumber.length && (
-            <span className="ml-1 animate-pulse bg-gray-800 w-2 h-12 inline-block align-middle"></span>
-          )}
-
-          {/* 隐藏的输入框（用于获取物理键盘输入） */}
-          <input
-            ref={inputRef}
-            type="text"
-            className="absolute opacity-0 -z-10"
-            autoFocus
-          />
-        </div>
-
-        {/* 操作提示 */}
-        <div className="bg-yellow-50 rounded-lg p-4 mb-8">
-          <p className="text-yellow-700 text-center">
-            <span className="font-semibold">操作说明：</span>
-            使用键盘数字键输入 | Backspace删除 | Delete清空 | Enter提交
-          </p>
-        </div>
-
-        {/* 历史记录统计 */}
-        {completedNumbers.length > 0 && (
-          <div className="mt-12">
+          {/* 右侧历史记录 */}
+          <div className="w-[600px] flex flex-col">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">
               练习记录
             </h3>
-            <div className="overflow-x-auto">
+            <div className="flex-1 overflow-y-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 sticky top-0">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       序号
@@ -271,13 +274,13 @@ export default function BankKeypadPractice() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {completedNumbers.map((record, index) => (
+                  {[...completedNumbers].reverse().map((record, index) => (
                     <tr
                       key={index}
                       className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {index + 1}
+                        {completedNumbers.length - index}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
                         {record.number}
@@ -307,7 +310,7 @@ export default function BankKeypadPractice() {
               </table>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
