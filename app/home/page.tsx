@@ -9,6 +9,15 @@ interface CompletedNumber {
   time: string;
 }
 
+// 新增练习会话接口
+interface PracticeSession {
+  totalQuestions: number;
+  correctCount: number;
+  totalTime: number;
+  accuracy: number;
+  completedAt: string;
+}
+
 // 银行实际业务数据集
 const BANK_NUMBERS = [
   "940223400",
@@ -24,8 +33,10 @@ const BANK_NUMBERS = [
 ];
 
 // 配置变量
-const MIN_LENGTH = 8; // 最小长度
-const MAX_LENGTH = 12; // 最大长度
+const MIN_LENGTH = 2; // 最小长度
+const MAX_LENGTH = 4; // 最大长度
+const QUESTIONS_PER_SESSION = 2; // 每轮练习题目数
+const TIME_LIMIT = 5 * 60 * 1000; // 5分钟时间限制（毫秒）
 
 export default function BankKeypadPractice() {
   const [targetNumber, setTargetNumber] = useState("");
@@ -40,6 +51,13 @@ export default function BankKeypadPractice() {
   const [completedNumbers, setCompletedNumbers] = useState<CompletedNumber[]>(
     [],
   );
+  const [currentQuestionCount, setCurrentQuestionCount] = useState(0);
+  const [practiceSessions, setPracticeSessions] = useState<PracticeSession[]>(
+    [],
+  );
+  const [sessionStartTime, setSessionStartTime] = useState(0);
+  const [sessionCorrectCount, setSessionCorrectCount] = useState(0);
+  const [isSessionCompleted, setIsSessionCompleted] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // 生成纯数字练习序列（无小数点）
@@ -66,19 +84,77 @@ export default function BankKeypadPractice() {
 
   // 组件挂载时初始化
   useEffect(() => {
-    initPractice();
-  }, [initPractice]);
+    const newNumber = generatePracticeNumber();
+    setTargetNumber(newNumber);
+  }, [generatePracticeNumber]);
+
+  // 完成练习会话
+  const completeSession = useCallback(() => {
+    // 如果会话已经完成或当前没有进行中的练习，不再记录
+    if (isSessionCompleted || !isRunning) return;
+
+    const totalTime = (Date.now() - sessionStartTime) / 1000;
+    const sessionAccuracy = Math.round(
+      (sessionCorrectCount / QUESTIONS_PER_SESSION) * 100,
+    );
+
+    // 只在完成一轮练习时才更新记录
+    if (currentQuestionCount > 0) {
+      console.log("完成一轮练习");
+      setPracticeSessions((prev) => [
+        ...prev,
+        {
+          totalQuestions: QUESTIONS_PER_SESSION,
+          correctCount: sessionCorrectCount,
+          totalTime: totalTime,
+          accuracy: sessionAccuracy,
+          completedAt: new Date().toLocaleString(),
+        },
+      ]);
+    }
+
+    // 标记会话已完成
+    setIsSessionCompleted(true);
+    // 只停止练习，不重置任何状态
+    setIsRunning(false);
+  }, [
+    sessionStartTime,
+    sessionCorrectCount,
+    currentQuestionCount,
+    isSessionCompleted,
+    isRunning,
+  ]);
 
   // 开始/暂停练习
   const togglePractice = useCallback(() => {
     if (!isRunning) {
-      setStartTime(Date.now() - elapsedTime);
+      // 如果当前没有进行中的练习，重置所有状态
+      if (isSessionCompleted) {
+        setSessionStartTime(Date.now());
+        setSessionCorrectCount(0);
+        setCurrentQuestionCount(0);
+        setStartTime(Date.now());
+        setElapsedTime(0);
+        setAccuracy(0);
+        setIsSessionCompleted(false);
+        // 确保在开始练习时生成新的目标数字
+        const newNumber = generatePracticeNumber();
+        setTargetNumber(newNumber);
+      } else {
+        setStartTime(Date.now() - elapsedTime);
+      }
       setIsRunning(true);
     } else {
       setElapsedTime(Date.now() - startTime);
       setIsRunning(false);
     }
-  }, [isRunning, startTime, elapsedTime]);
+  }, [
+    isRunning,
+    startTime,
+    elapsedTime,
+    isSessionCompleted,
+    generatePracticeNumber,
+  ]);
 
   // 实时匹配逻辑
   useEffect(() => {
@@ -91,27 +167,67 @@ export default function BankKeypadPractice() {
       );
     setCharStatus(newStatus);
 
-    // 计算实时正确率
-    const correctCount = newStatus.filter((s) => s === "correct").length;
-    const totalChars = Math.max(inputValue.length, 1);
-    setAccuracy(Math.round((correctCount / totalChars) * 100));
-    if (inputValue.length === targetNumber.length && targetNumber) {
-      setTimeout(() => {
-        completePractice(newStatus, Number((elapsedTime / 1000).toFixed(1)));
-      }, 500);
+    // 计算实时正确率（按题目计算）
+    const isCurrentQuestionCorrect = newStatus.every((s) => s === "correct");
+    const currentAccuracy = Math.round(
+      ((sessionCorrectCount + (isCurrentQuestionCorrect ? 1 : 0)) /
+        (currentQuestionCount + 1)) *
+        100,
+    );
+    setAccuracy(currentAccuracy);
+    debugger;
+
+    if (
+      inputValue.length === targetNumber.length &&
+      targetNumber &&
+      !isSessionCompleted
+    ) {
+      const isCorrect = newStatus.every((s) => s === "correct");
+      if (isCorrect) {
+        setSessionCorrectCount((prev) => prev + 1);
+      }
+
+      setCurrentQuestionCount((prev) => {
+        const newCount = prev + 1;
+        if (newCount >= QUESTIONS_PER_SESSION) {
+          completeSession();
+          return newCount; // 保持当前计数，不重置
+        }
+        return newCount;
+      });
+
+      // 直接生成新的目标数字，不暂停
+      const newNumber = generatePracticeNumber();
+      setTargetNumber(newNumber);
+      setInputValue("");
+      setCharStatus([]);
     }
-  }, [inputValue, targetNumber]);
+  }, [
+    inputValue,
+    targetNumber,
+    completeSession,
+    generatePracticeNumber,
+    sessionCorrectCount,
+    currentQuestionCount,
+    isSessionCompleted,
+  ]);
 
   // 计时器逻辑
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (isRunning && startTime > 0 && inputValue.length < targetNumber.length) {
+    if (isRunning && startTime > 0 && !isSessionCompleted) {
       timer = setInterval(() => {
-        setElapsedTime(Date.now() - startTime);
+        const currentElapsed = Date.now() - startTime;
+        setElapsedTime(currentElapsed);
+
+        // 检查是否超过5分钟
+        if (currentElapsed >= TIME_LIMIT) {
+          completeSession();
+        }
       }, 100);
     }
     return () => clearInterval(timer);
-  }, [isRunning, startTime, inputValue, targetNumber]);
+  }, [isRunning, startTime, completeSession, isSessionCompleted]);
 
   // 处理键盘输入
   const handleKeyDown = useCallback(
@@ -141,31 +257,6 @@ export default function BankKeypadPractice() {
     },
     [inputValue, targetNumber, isRunning, charStatus, togglePractice],
   );
-
-  // 完成练习统计
-  const completePractice = (
-    newStatus: ("correct" | "wrong")[],
-    timeUsed: number,
-  ) => {
-    const correctCount = newStatus.filter((s) => s === "correct").length;
-    const totalChars = targetNumber.length;
-    const practiceAccuracy = Math.round((correctCount / totalChars) * 100);
-
-    setCompletedNumbers((prev) => [
-      ...prev,
-      {
-        number: targetNumber,
-        input: inputValue,
-        accuracy: practiceAccuracy,
-        time: timeUsed.toFixed(2),
-      },
-    ]);
-
-    // 2秒后开始新练习
-    setTimeout(() => {
-      initPractice();
-    }, 2000);
-  };
 
   // 自动聚焦输入框 [1]()
   useEffect(() => {
@@ -201,14 +292,26 @@ export default function BankKeypadPractice() {
                 </p>
               </div>
               <div className="w-32 p-4 rounded-lg bg-green-50">
-                <p className="mb-1 text-sm text-green-600">正确率</p>
-                <p className="font-mono text-2xl">{accuracy}%</p>
+                <p className="mb-1 text-sm text-green-600">正确题数</p>
+                <p className="font-mono text-2xl">{sessionCorrectCount}</p>
               </div>
-              <div className="p-4 rounded-lg bg-purple-50">
-                <p className="mb-1 text-sm text-purple-600">数字长度设置</p>
+              <div className="w-32 p-4 rounded-lg bg-purple-50">
+                <p className="mb-1 text-sm text-purple-600">当前进度</p>
+                <p className="font-mono text-2xl">
+                  {currentQuestionCount}/{QUESTIONS_PER_SESSION}
+                </p>
+              </div>
+              <div className="w-32 p-4 rounded-lg bg-yellow-50">
+                <p className="mb-1 text-sm text-yellow-600">剩余时间</p>
+                <p className="font-mono text-2xl">
+                  {Math.max(0, (TIME_LIMIT - elapsedTime) / 1000).toFixed(1)}s
+                </p>
+              </div>
+              <div className="p-4 rounded-lg bg-indigo-50">
+                <p className="mb-1 text-sm text-indigo-600">数字长度设置</p>
                 <div className="flex items-center space-x-2">
                   <div className="flex items-center space-x-1">
-                    <label className="text-xs text-purple-600">最小:</label>
+                    <label className="text-xs text-indigo-600">最小:</label>
                     <input
                       type="number"
                       min="1"
@@ -221,12 +324,12 @@ export default function BankKeypadPractice() {
                           initPractice();
                         }
                       }}
-                      className="w-12 px-1 py-0.5 text-sm border rounded border-purple-200 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      className="w-12 px-1 py-0.5 text-sm border rounded border-indigo-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
-                  <span className="text-purple-600">-</span>
+                  <span className="text-indigo-600">-</span>
                   <div className="flex items-center space-x-1">
-                    <label className="text-xs text-purple-600">最大:</label>
+                    <label className="text-xs text-indigo-600">最大:</label>
                     <input
                       type="number"
                       min={minLength}
@@ -239,7 +342,7 @@ export default function BankKeypadPractice() {
                           initPractice();
                         }
                       }}
-                      className="w-12 px-1 py-0.5 text-sm border rounded border-purple-200 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      className="w-12 px-1 py-0.5 text-sm border rounded border-indigo-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
                 </div>
@@ -332,10 +435,10 @@ export default function BankKeypadPractice() {
                       序号
                     </th>
                     <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                      目标数字
+                      完成时间
                     </th>
                     <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                      输入数字
+                      正确题数
                     </th>
                     <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                       正确率
@@ -346,38 +449,38 @@ export default function BankKeypadPractice() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {completedNumbers
+                  {practiceSessions
                     .slice()
                     .reverse()
-                    .map((record, index) => (
+                    .map((session, index) => (
                       <tr
                         key={index}
                         className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                       >
                         <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
-                          {completedNumbers.length - index}
+                          {practiceSessions.length - index}
                         </td>
-                        <td className="px-6 py-4 font-mono text-sm text-gray-500 whitespace-nowrap">
-                          {record.number}
+                        <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                          {session.completedAt}
                         </td>
-                        <td className="px-6 py-4 font-mono text-sm text-gray-500 whitespace-nowrap">
-                          {record.input}
+                        <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                          {session.correctCount}/{QUESTIONS_PER_SESSION}
                         </td>
                         <td className="px-6 py-4 text-sm whitespace-nowrap">
                           <span
                             className={`px-2 py-1 rounded-full ${
-                              record.accuracy > 90
+                              session.accuracy > 90
                                 ? "bg-green-100 text-green-800"
-                                : record.accuracy > 70
+                                : session.accuracy > 70
                                 ? "bg-yellow-100 text-yellow-800"
                                 : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {record.accuracy}%
+                            {session.accuracy}%
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                          {record.time}
+                          {session.totalTime.toFixed(1)}
                         </td>
                       </tr>
                     ))}
