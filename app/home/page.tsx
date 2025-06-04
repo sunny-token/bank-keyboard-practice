@@ -86,7 +86,9 @@ export default function BankKeypadPractice() {
     const totalChars = Math.max(inputValue.length, 1);
     setAccuracy(Math.round((correctCount / totalChars) * 100));
     if (inputValue.length === targetNumber.length && targetNumber) {
-      completePractice(newStatus);
+      setTimeout(() => {
+        completePractice(newStatus);
+      }, 500);
     }
   }, [inputValue, targetNumber]);
 
@@ -164,8 +166,8 @@ export default function BankKeypadPractice() {
   }, [handleKeyDown]);
 
   return (
-    <div className="min-h-screen bg-gray-50 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
+    <div className="h-screen bg-gray-50 sm:px-6 lg:px-8 overflow-y-auto scrollbar-hide">
+      <div className=" mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8 my-2">
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             银行数字键盘训练系统
