@@ -14,7 +14,7 @@ interface PracticeSession {
 // 配置变量
 const MIN_LENGTH = 3; // 最小长度
 const MAX_LENGTH = 8; // 最大长度
-const QUESTIONS_PER_SESSION = 10; // 每轮练习题目数
+const QUESTIONS_PER_SESSION = 80; // 每轮练习题目数
 const TIME_LIMIT = 5 * 60 * 1000; // 5分钟时间限制（毫秒）
 
 export default function BankKeypadPractice() {
