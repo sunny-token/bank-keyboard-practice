@@ -97,6 +97,7 @@ export default function BankKeypadPractice() {
         // 确保在开始练习时生成新的目标数字
         const newNumber = generatePracticeNumber();
         setTargetNumber(newNumber);
+        setInputValue("");
       } else {
         setStartTime(Date.now() - elapsedTime);
       }
