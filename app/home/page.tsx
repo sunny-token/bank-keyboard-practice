@@ -30,7 +30,6 @@ export default function BankKeypadPractice() {
     [],
   );
   const [sessionCorrectCount, setSessionCorrectCount] = useState(0);
-  const [isSessionCompleted, setIsSessionCompleted] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const isDone = useRef<boolean>(false);
@@ -54,7 +53,7 @@ export default function BankKeypadPractice() {
   const completeSession = useCallback(
     (correctCount: number) => {
       // 如果会话已经完成或当前没有进行中的练习，不再记录
-      if (isSessionCompleted || !isRunning || isDone.current) return;
+      if (isDone.current || !isRunning) return;
       isDone.current = true;
       const totalTime = (Date.now() - startTime) / 1000;
       const sessionAccuracy = Math.round(
@@ -75,24 +74,21 @@ export default function BankKeypadPractice() {
         ]);
       }
 
-      // 标记会话已完成
-      setIsSessionCompleted(true);
       // 只停止练习，不重置任何状态
       setIsRunning(false);
     },
-    [startTime, currentQuestionCount, isSessionCompleted, isRunning],
+    [startTime, currentQuestionCount, isRunning],
   );
 
   // 开始/暂停练习
   const togglePractice = useCallback(() => {
     if (!isRunning) {
       // 如果当前没有进行中的练习，重置所有状态
-      if (isSessionCompleted) {
+      if (isDone.current) {
         setStartTime(Date.now());
         setSessionCorrectCount(0);
         setCurrentQuestionCount(0);
         setElapsedTime(0);
-        setIsSessionCompleted(false);
         isDone.current = false;
         // 确保在开始练习时生成新的目标数字
         const newNumber = generatePracticeNumber();
@@ -106,13 +102,7 @@ export default function BankKeypadPractice() {
       setElapsedTime(Date.now() - startTime);
       setIsRunning(false);
     }
-  }, [
-    isRunning,
-    startTime,
-    elapsedTime,
-    isSessionCompleted,
-    generatePracticeNumber,
-  ]);
+  }, [isRunning, startTime, elapsedTime, generatePracticeNumber]);
 
   // 实时匹配逻辑
   useEffect(() => {
@@ -128,7 +118,7 @@ export default function BankKeypadPractice() {
     if (
       inputValue.length === targetNumber.length &&
       targetNumber &&
-      !isSessionCompleted
+      !isDone.current
     ) {
       const isCorrect = newStatus.every((s) => s === "correct");
       const newCorrectCount = isCorrect
@@ -162,13 +152,13 @@ export default function BankKeypadPractice() {
     generatePracticeNumber,
     sessionCorrectCount,
     currentQuestionCount,
-    isSessionCompleted,
+    isDone.current,
   ]);
 
   // 计时器逻辑
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (isRunning && startTime > 0 && !isSessionCompleted) {
+    if (isRunning && startTime > 0 && !isDone.current) {
       timer = setInterval(() => {
         const currentElapsed = Date.now() - startTime;
         setElapsedTime(currentElapsed);
@@ -182,7 +172,7 @@ export default function BankKeypadPractice() {
       }, 100);
     }
     return () => clearInterval(timer);
-  }, [isRunning, startTime, completeSession, isSessionCompleted]);
+  }, [isRunning, startTime, completeSession, isDone.current]);
 
   // 处理键盘输入
   const handleKeyDown = useCallback(
