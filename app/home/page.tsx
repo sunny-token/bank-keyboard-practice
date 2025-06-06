@@ -10,13 +10,14 @@ interface PracticeSession {
   accuracy: number;
   completedAt: string;
   numbersPerMinute: number; // 新增每分钟输入数字数量
+  totalCharacters: number; // 新增总字符数
 }
 
 // 配置变量
 const MIN_LENGTH = 3; // 最小长度
 const MAX_LENGTH = 8; // 最大长度
-const QUESTIONS_PER_SESSION = 80; // 每轮练习题目数
-const TIME_LIMIT = 5 * 60 * 1000; // 5分钟时间限制（毫秒）
+const DEFAULT_QUESTIONS_PER_SESSION = 80; // 默认每轮练习题目数
+const DEFAULT_TIME_LIMIT = 5 * 60 * 1000; // 默认5分钟时间限制（毫秒）
 
 export default function BankKeypadPractice() {
   const [targetNumber, setTargetNumber] = useState("");
@@ -26,11 +27,16 @@ export default function BankKeypadPractice() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [minLength, setMinLength] = useState(MIN_LENGTH);
   const [maxLength, setMaxLength] = useState(MAX_LENGTH);
+  const [timeLimit, setTimeLimit] = useState(DEFAULT_TIME_LIMIT);
+  const [questionsPerSession, setQuestionsPerSession] = useState(
+    DEFAULT_QUESTIONS_PER_SESSION,
+  );
   const [currentQuestionCount, setCurrentQuestionCount] = useState(0);
   const [practiceSessions, setPracticeSessions] = useState<PracticeSession[]>(
     [],
   );
   const [sessionCorrectCount, setSessionCorrectCount] = useState(0);
+  const totalCharacters = useRef(0); // 改为useRef
   const [isRunning, setIsRunning] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const isDone = useRef<boolean>(false);
@@ -56,12 +62,14 @@ export default function BankKeypadPractice() {
       // 如果会话已经完成或当前没有进行中的练习，不再记录
       if (isDone.current || !isRunning) return;
       isDone.current = true;
-      const totalTime = (Date.now() - startTime) / 1000;
+      const totalTime = Math.floor((Date.now() - startTime) / 1000);
       const sessionAccuracy = Math.round(
-        (correctCount / QUESTIONS_PER_SESSION) * 100,
+        (correctCount / questionsPerSession) * 100,
       );
+      console.log("++++++:", totalCharacters.current, totalTime);
+
       const numbersPerMinute = Math.round(
-        (QUESTIONS_PER_SESSION * targetNumber.length) / (totalTime / 60),
+        totalCharacters.current / (totalTime / 60),
       );
 
       // 只在完成一轮练习时才更新记录
@@ -81,12 +89,13 @@ export default function BankKeypadPractice() {
           return [
             ...prev,
             {
-              totalQuestions: QUESTIONS_PER_SESSION,
+              totalQuestions: questionsPerSession,
               correctCount: correctCount,
               totalTime: totalTime,
               accuracy: sessionAccuracy,
               completedAt: new Date().toISOString().split("T")[0],
               numbersPerMinute: numbersPerMinute,
+              totalCharacters: totalCharacters.current,
             },
             // ...mockData,
           ];
@@ -96,7 +105,7 @@ export default function BankKeypadPractice() {
       // 只停止练习，不重置任何状态
       setIsRunning(false);
     },
-    [startTime, currentQuestionCount, isRunning],
+    [startTime, currentQuestionCount, isRunning, questionsPerSession],
   );
 
   // 开始/暂停练习
@@ -108,6 +117,7 @@ export default function BankKeypadPractice() {
         setSessionCorrectCount(0);
         setCurrentQuestionCount(0);
         setElapsedTime(0);
+        totalCharacters.current = 0; // 重置总字符数
         isDone.current = false;
         // 确保在开始练习时生成新的目标数字
         const newNumber = generatePracticeNumber();
@@ -149,7 +159,7 @@ export default function BankKeypadPractice() {
 
       setCurrentQuestionCount((prev) => {
         const newCount = prev + 1;
-        if (newCount >= QUESTIONS_PER_SESSION) {
+        if (newCount >= questionsPerSession) {
           setTimeout(() => {
             completeSession(newCorrectCount);
           }, 500);
@@ -172,6 +182,7 @@ export default function BankKeypadPractice() {
     sessionCorrectCount,
     currentQuestionCount,
     isDone.current,
+    questionsPerSession,
   ]);
 
   // 计时器逻辑
@@ -182,8 +193,8 @@ export default function BankKeypadPractice() {
         const currentElapsed = Date.now() - startTime;
         setElapsedTime(currentElapsed);
 
-        // 检查是否超过5分钟
-        if (currentElapsed >= TIME_LIMIT) {
+        // 检查是否超过时间限制
+        if (currentElapsed >= timeLimit) {
           setTimeout(() => {
             completeSession(sessionCorrectCount);
           }, 500);
@@ -191,7 +202,7 @@ export default function BankKeypadPractice() {
       }, 100);
     }
     return () => clearInterval(timer);
-  }, [isRunning, startTime, completeSession, isDone.current]);
+  }, [isRunning, startTime, completeSession, isDone.current, timeLimit]);
 
   // 处理键盘输入
   const handleKeyDown = useCallback(
@@ -210,12 +221,17 @@ export default function BankKeypadPractice() {
       // 只处理数字键和功能键
       if (e.key >= "0" && e.key <= "9") {
         setInputValue((prev) => prev + e.key);
+        totalCharacters.current += 1; // 更新总字符数
         e.preventDefault();
       } else if (e.key === "Backspace") {
-        setInputValue((prev) => prev.slice(0, -1));
+        if (inputValue.length > 0) {
+          totalCharacters.current -= 1; // 删除时减少总字符数
+          setInputValue((prev) => prev.slice(0, -1));
+        }
         e.preventDefault();
       } else if (e.key === "Escape" || e.key === "Delete") {
         setInputValue("");
+        totalCharacters.current = 0; // 清空时重置总字符数
         e.preventDefault();
       }
     },
@@ -264,18 +280,24 @@ export default function BankKeypadPractice() {
                 <div className="w-32 p-4 rounded-lg bg-purple-50">
                   <p className="mb-1 text-sm text-purple-600">当前进度</p>
                   <p className="font-mono text-2xl">
-                    {currentQuestionCount}/{QUESTIONS_PER_SESSION}
+                    {currentQuestionCount}/{questionsPerSession}
+                  </p>
+                </div>
+                <div className="w-32 p-4 rounded-lg bg-yellow-50">
+                  <p className="mb-1 text-sm text-yellow-600">剩余时间</p>
+                  <p className="font-mono text-2xl">
+                    {Math.max(0, (timeLimit - elapsedTime) / 1000).toFixed(1)}s
+                  </p>
+                </div>
+                <div className="w-32 p-4 rounded-lg bg-red-50">
+                  <p className="mb-1 text-sm text-red-600">总个数</p>
+                  <p className="font-mono text-2xl">
+                    {totalCharacters.current}
                   </p>
                 </div>
               </div>
               {/* 第二行 */}
               <div className="flex justify-center space-x-8">
-                <div className="w-32 p-4 rounded-lg bg-yellow-50">
-                  <p className="mb-1 text-sm text-yellow-600">剩余时间</p>
-                  <p className="font-mono text-2xl">
-                    {Math.max(0, (TIME_LIMIT - elapsedTime) / 1000).toFixed(1)}s
-                  </p>
-                </div>
                 <div className="p-4 rounded-lg bg-indigo-50">
                   <p className="mb-1 text-sm text-indigo-600">数字长度设置</p>
                   <div className="flex items-center space-x-2">
@@ -318,16 +340,38 @@ export default function BankKeypadPractice() {
                     </div>
                   </div>
                 </div>
-                {/* <button
-                  onClick={togglePractice}
-                  className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                    isRunning
-                      ? "bg-red-100 text-red-600 hover:bg-red-200"
-                      : "bg-green-100 text-green-600 hover:bg-green-200"
-                  }`}
-                >
-                  {isRunning ? "暂停" : "开始"}
-                </button> */}
+                <div className="p-4 rounded-lg bg-pink-50">
+                  <p className="mb-1 text-sm text-pink-600">时间限制(分钟)</p>
+                  <input
+                    type="number"
+                    min="1"
+                    max="60"
+                    value={timeLimit / (60 * 1000)}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (value >= 1 && value <= 60) {
+                        setTimeLimit(value * 60 * 1000);
+                      }
+                    }}
+                    className="w-16 px-1 py-0.5 text-sm border rounded border-pink-200 focus:outline-none focus:ring-1 focus:ring-pink-500"
+                  />
+                </div>
+                <div className="p-4 rounded-lg bg-green-50">
+                  <p className="mb-1 text-sm text-green-600">题目数量</p>
+                  <input
+                    type="number"
+                    min="1"
+                    max="200"
+                    value={questionsPerSession}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (value >= 1 && value <= 200) {
+                        setQuestionsPerSession(value);
+                      }
+                    }}
+                    className="w-16 px-1 py-0.5 text-sm border rounded border-green-200 focus:outline-none focus:ring-1 focus:ring-green-500"
+                  />
+                </div>
               </div>
             </div>
 
@@ -439,7 +483,7 @@ export default function BankKeypadPractice() {
                           {session.completedAt}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                          {session.correctCount}/{QUESTIONS_PER_SESSION}
+                          {session.correctCount}/{questionsPerSession}
                         </td>
                         <td className="px-6 py-4 text-sm whitespace-nowrap">
                           <span
@@ -455,7 +499,7 @@ export default function BankKeypadPractice() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                          {session.totalTime.toFixed(1)}
+                          {session.totalTime}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                           {session.numbersPerMinute}
