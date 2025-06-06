@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import VisitCounter from "../components/VisitCounter";
 
 // 新增练习会话接口
 interface PracticeSession {
@@ -261,7 +262,7 @@ export default function BankKeypadPractice() {
           <p className="text-gray-600">使用物理键盘输入下方显示的数字序列</p>
         </div>
 
-        <div className="flex gap-8 h-[calc(100vh-200px)]">
+        <div className="flex gap-8 h-[calc(100vh-280px)]">
           {/* 左侧练习区域 */}
           <div className="flex-1">
             <div className="flex flex-col justify-center mb-8 space-y-4">
@@ -512,6 +513,7 @@ export default function BankKeypadPractice() {
           </div>
         </div>
       </div>
+      <VisitCounter />
     </div>
   );
 }
