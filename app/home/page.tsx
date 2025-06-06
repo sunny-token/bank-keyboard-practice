@@ -9,6 +9,7 @@ interface PracticeSession {
   totalTime: number;
   accuracy: number;
   completedAt: string;
+  numbersPerMinute: number; // 新增每分钟输入数字数量
 }
 
 // 配置变量
@@ -59,19 +60,37 @@ export default function BankKeypadPractice() {
       const sessionAccuracy = Math.round(
         (correctCount / QUESTIONS_PER_SESSION) * 100,
       );
+      const numbersPerMinute = Math.round(
+        (QUESTIONS_PER_SESSION * targetNumber.length) / (totalTime / 60),
+      );
 
       // 只在完成一轮练习时才更新记录
       if (currentQuestionCount > 0) {
-        setPracticeSessions((prev) => [
-          ...prev,
-          {
-            totalQuestions: QUESTIONS_PER_SESSION,
-            correctCount: correctCount,
-            totalTime: totalTime,
-            accuracy: sessionAccuracy,
-            completedAt: new Date().toLocaleString(),
-          },
-        ]);
+        setPracticeSessions((prev) => {
+          // 生成模拟数据
+          // const mockData = Array.from({ length: 20 }, (_, index) => ({
+          //   totalQuestions: QUESTIONS_PER_SESSION,
+          //   correctCount: Math.floor(Math.random() * QUESTIONS_PER_SESSION),
+          //   totalTime: Math.random() * 300, // 0-300秒
+          //   accuracy: Math.floor(Math.random() * 100),
+          //   completedAt: new Date(Date.now() - index * 24 * 60 * 60 * 1000)
+          //     .toISOString()
+          //     .split("T")[0], // 每天一条记录
+          //   numbersPerMinute: Math.floor(Math.random() * 200) + 50, // 50-250字/分钟
+          // }));
+          return [
+            ...prev,
+            {
+              totalQuestions: QUESTIONS_PER_SESSION,
+              correctCount: correctCount,
+              totalTime: totalTime,
+              accuracy: sessionAccuracy,
+              completedAt: new Date().toISOString().split("T")[0],
+              numbersPerMinute: numbersPerMinute,
+            },
+            // ...mockData,
+          ];
+        });
       }
 
       // 只停止练习，不重置任何状态
@@ -218,7 +237,7 @@ export default function BankKeypadPractice() {
 
   return (
     <div className="h-screen overflow-y-auto bg-gray-50 sm:px-6 lg:px-8 scrollbar-hide">
-      <div className="p-8 mx-auto my-2 overflow-y-hidden bg-white shadow-md rounded-xl">
+      <div className="flex-1 p-8 mx-auto my-4 overflow-y-hidden bg-white shadow-md rounded-xl">
         <div className="mb-10 text-center">
           <h1 className="mb-2 text-3xl font-bold text-gray-900">
             银行数字键盘训练系统
@@ -226,84 +245,90 @@ export default function BankKeypadPractice() {
           <p className="text-gray-600">使用物理键盘输入下方显示的数字序列</p>
         </div>
 
-        <div className="flex gap-8">
+        <div className="flex gap-8 h-[calc(100vh-200px)]">
           {/* 左侧练习区域 */}
           <div className="flex-1">
-            <div className="flex justify-center mb-8 space-x-8">
-              <div className="w-32 p-4 rounded-lg bg-blue-50">
-                <p className="mb-1 text-sm text-blue-600">用时</p>
-                <p className="font-mono text-2xl">
-                  {(elapsedTime / 1000).toFixed(1)}s
-                </p>
-              </div>
-              <div className="w-32 p-4 rounded-lg bg-green-50">
-                <p className="mb-1 text-sm text-green-600">正确题数</p>
-                <p className="font-mono text-2xl">{sessionCorrectCount}</p>
-              </div>
-              <div className="w-32 p-4 rounded-lg bg-purple-50">
-                <p className="mb-1 text-sm text-purple-600">当前进度</p>
-                <p className="font-mono text-2xl">
-                  {currentQuestionCount}/{QUESTIONS_PER_SESSION}
-                </p>
-              </div>
-              <div className="w-32 p-4 rounded-lg bg-yellow-50">
-                <p className="mb-1 text-sm text-yellow-600">剩余时间</p>
-                <p className="font-mono text-2xl">
-                  {Math.max(0, (TIME_LIMIT - elapsedTime) / 1000).toFixed(1)}s
-                </p>
-              </div>
-              <div className="p-4 rounded-lg bg-indigo-50">
-                <p className="mb-1 text-sm text-indigo-600">数字长度设置</p>
-                <div className="flex items-center space-x-2">
-                  <div className="flex items-center space-x-1">
-                    <label className="text-xs text-indigo-600">最小:</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max={maxLength}
-                      value={minLength}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (value > 0 && value <= maxLength) {
-                          setMinLength(value);
-                          const newNumber = generatePracticeNumber();
-                          setTargetNumber(newNumber);
-                        }
-                      }}
-                      className="w-12 px-1 py-0.5 text-sm border rounded border-indigo-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    />
-                  </div>
-                  <span className="text-indigo-600">-</span>
-                  <div className="flex items-center space-x-1">
-                    <label className="text-xs text-indigo-600">最大:</label>
-                    <input
-                      type="number"
-                      min={minLength}
-                      max="20"
-                      value={maxLength}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (value >= minLength && value <= 20) {
-                          setMaxLength(value);
-                          const newNumber = generatePracticeNumber();
-                          setTargetNumber(newNumber);
-                        }
-                      }}
-                      className="w-12 px-1 py-0.5 text-sm border rounded border-indigo-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    />
-                  </div>
+            <div className="flex flex-col justify-center mb-8 space-y-4">
+              {/* 第一行 */}
+              <div className="flex justify-center space-x-8">
+                <div className="w-32 p-4 rounded-lg bg-blue-50">
+                  <p className="mb-1 text-sm text-blue-600">用时</p>
+                  <p className="font-mono text-2xl">
+                    {(elapsedTime / 1000).toFixed(1)}s
+                  </p>
+                </div>
+                <div className="w-32 p-4 rounded-lg bg-green-50">
+                  <p className="mb-1 text-sm text-green-600">正确题数</p>
+                  <p className="font-mono text-2xl">{sessionCorrectCount}</p>
+                </div>
+                <div className="w-32 p-4 rounded-lg bg-purple-50">
+                  <p className="mb-1 text-sm text-purple-600">当前进度</p>
+                  <p className="font-mono text-2xl">
+                    {currentQuestionCount}/{QUESTIONS_PER_SESSION}
+                  </p>
                 </div>
               </div>
-              <button
-                onClick={togglePractice}
-                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                  isRunning
-                    ? "bg-red-100 text-red-600 hover:bg-red-200"
-                    : "bg-green-100 text-green-600 hover:bg-green-200"
-                }`}
-              >
-                {isRunning ? "暂停" : "开始"}
-              </button>
+              {/* 第二行 */}
+              <div className="flex justify-center space-x-8">
+                <div className="w-32 p-4 rounded-lg bg-yellow-50">
+                  <p className="mb-1 text-sm text-yellow-600">剩余时间</p>
+                  <p className="font-mono text-2xl">
+                    {Math.max(0, (TIME_LIMIT - elapsedTime) / 1000).toFixed(1)}s
+                  </p>
+                </div>
+                <div className="p-4 rounded-lg bg-indigo-50">
+                  <p className="mb-1 text-sm text-indigo-600">数字长度设置</p>
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1">
+                      <label className="text-xs text-indigo-600">最小:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max={maxLength}
+                        value={minLength}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (value > 0 && value <= maxLength) {
+                            setMinLength(value);
+                            const newNumber = generatePracticeNumber();
+                            setTargetNumber(newNumber);
+                          }
+                        }}
+                        className="w-12 px-1 py-0.5 text-sm border rounded border-indigo-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <span className="text-indigo-600">-</span>
+                    <div className="flex items-center space-x-1">
+                      <label className="text-xs text-indigo-600">最大:</label>
+                      <input
+                        type="number"
+                        min={minLength}
+                        max="20"
+                        value={maxLength}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (value >= minLength && value <= 20) {
+                            setMaxLength(value);
+                            const newNumber = generatePracticeNumber();
+                            setTargetNumber(newNumber);
+                          }
+                        }}
+                        className="w-12 px-1 py-0.5 text-sm border rounded border-indigo-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+                {/* <button
+                  onClick={togglePractice}
+                  className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                    isRunning
+                      ? "bg-red-100 text-red-600 hover:bg-red-200"
+                      : "bg-green-100 text-green-600 hover:bg-green-200"
+                  }`}
+                >
+                  {isRunning ? "暂停" : "开始"}
+                </button> */}
+              </div>
             </div>
 
             {/* 目标数字显示区 */}
@@ -370,7 +395,7 @@ export default function BankKeypadPractice() {
           </div>
 
           {/* 右侧历史记录 */}
-          <div className="w-[600px] flex flex-col">
+          <div className="w-[600px] flex flex-col h-full">
             <h3 className="mb-4 text-xl font-semibold text-gray-700">
               练习记录
             </h3>
@@ -392,6 +417,9 @@ export default function BankKeypadPractice() {
                     </th>
                     <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                       用时(秒)
+                    </th>
+                    <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                      字数/分钟
                     </th>
                   </tr>
                 </thead>
@@ -428,6 +456,9 @@ export default function BankKeypadPractice() {
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                           {session.totalTime.toFixed(1)}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                          {session.numbersPerMinute}
                         </td>
                       </tr>
                     ))}
