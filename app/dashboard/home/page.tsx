@@ -1,18 +1,13 @@
 "use client";
 
 import VisitCounter from "@/app/components/VisitCounter";
+import PracticeRecordList, {
+  PracticeRecordListRef,
+} from "@/app/components/PracticeRecordList";
 import { useState, useEffect, useCallback, useRef } from "react";
-
-// 新增练习会话接口
-interface PracticeSession {
-  totalQuestions: number;
-  correctCount: number;
-  totalTime: number;
-  accuracy: number;
-  completedAt: string;
-  numbersPerMinute: number; // 新增每分钟输入数字数量
-  totalCharacters: number; // 新增总字符数
-}
+import { http } from "@/lib/request";
+import { PracticeSession } from "@/app/types/practice";
+import { useAuth } from "@/app/hooks/useAuth";
 
 // 配置变量
 const MIN_LENGTH = 3; // 最小长度
@@ -21,6 +16,7 @@ const DEFAULT_QUESTIONS_PER_SESSION = 80; // 默认每轮练习题目数
 const DEFAULT_TIME_LIMIT = 5 * 60 * 1000; // 默认5分钟时间限制（毫秒）
 
 export default function BankKeypadPractice() {
+  const { userId } = useAuth();
   const [targetNumber, setTargetNumber] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [charStatus, setCharStatus] = useState<("correct" | "wrong")[]>([]);
@@ -33,14 +29,12 @@ export default function BankKeypadPractice() {
     DEFAULT_QUESTIONS_PER_SESSION,
   );
   const [currentQuestionCount, setCurrentQuestionCount] = useState(0);
-  const [practiceSessions, setPracticeSessions] = useState<PracticeSession[]>(
-    [],
-  );
   const [sessionCorrectCount, setSessionCorrectCount] = useState(0);
   const totalCharacters = useRef(0); // 改为useRef
   const [isRunning, setIsRunning] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const isDone = useRef<boolean>(false);
+  const practiceRecordListRef = useRef<PracticeRecordListRef>(null);
 
   // 生成纯数字练习序列（无小数点）
   const generatePracticeNumber = useCallback(() => {
@@ -59,7 +53,7 @@ export default function BankKeypadPractice() {
 
   // 完成练习会话
   const completeSession = useCallback(
-    (correctCount: number) => {
+    async (correctCount: number) => {
       // 如果会话已经完成或当前没有进行中的练习，不再记录
       if (isDone.current || !isRunning) return;
       isDone.current = true;
@@ -67,46 +61,29 @@ export default function BankKeypadPractice() {
       const sessionAccuracy = Math.round(
         (correctCount / questionsPerSession) * 100,
       );
-      console.log("++++++:", totalCharacters.current, totalTime);
-
       const numbersPerMinute = Math.round(
         totalCharacters.current / (totalTime / 60),
       );
 
       // 只在完成一轮练习时才更新记录
       if (currentQuestionCount > 0) {
-        setPracticeSessions((prev) => {
-          // 生成模拟数据
-          // const mockData = Array.from({ length: 20 }, (_, index) => ({
-          //   totalQuestions: QUESTIONS_PER_SESSION,
-          //   correctCount: Math.floor(Math.random() * QUESTIONS_PER_SESSION),
-          //   totalTime: Math.random() * 300, // 0-300秒
-          //   accuracy: Math.floor(Math.random() * 100),
-          //   completedAt: new Date(Date.now() - index * 24 * 60 * 60 * 1000)
-          //     .toISOString()
-          //     .split("T")[0], // 每天一条记录
-          //   numbersPerMinute: Math.floor(Math.random() * 200) + 50, // 50-250字/分钟
-          // }));
-          return [
-            ...prev,
-            {
-              totalQuestions: questionsPerSession,
-              correctCount: correctCount,
-              totalTime: totalTime,
-              accuracy: sessionAccuracy,
-              completedAt: new Date().toISOString().split("T")[0],
-              numbersPerMinute: numbersPerMinute,
-              totalCharacters: totalCharacters.current,
-            },
-            // ...mockData,
-          ];
+        // 保存到数据库
+        await http.post("/api/bankRecord", {
+          correctCount,
+          accuracy: sessionAccuracy,
+          duration: totalTime,
+          wpm: numbersPerMinute,
+          userId: userId,
         });
+
+        // 刷新练习记录列表
+        practiceRecordListRef.current?.refresh();
       }
 
       // 只停止练习，不重置任何状态
       setIsRunning(false);
     },
-    [startTime, currentQuestionCount, isRunning, questionsPerSession],
+    [startTime, currentQuestionCount, isRunning, questionsPerSession, userId],
   );
 
   // 开始/暂停练习
@@ -291,7 +268,7 @@ export default function BankKeypadPractice() {
                   </p>
                 </div>
                 <div className="w-32 p-4 rounded-lg bg-red-50">
-                  <p className="mb-1 text-sm text-red-600">总个数</p>
+                  <p className="mb-1 text-sm text-red-600">总字数</p>
                   <p className="font-mono text-2xl">
                     {totalCharacters.current}
                   </p>
@@ -440,77 +417,11 @@ export default function BankKeypadPractice() {
           </div>
 
           {/* 右侧历史记录 */}
-          <div className="w-[600px] flex flex-col h-full">
-            <h3 className="mb-4 text-xl font-semibold text-gray-700">
-              练习记录
-            </h3>
-            <div className="flex-1 overflow-y-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="sticky top-0 bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                      序号
-                    </th>
-                    <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                      完成时间
-                    </th>
-                    <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                      正确题数
-                    </th>
-                    <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                      正确率
-                    </th>
-                    <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                      用时(秒)
-                    </th>
-                    <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                      字数/分钟
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {practiceSessions
-                    .slice()
-                    .reverse()
-                    .map((session, index) => (
-                      <tr
-                        key={index}
-                        className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                      >
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
-                          {practiceSessions.length - index}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                          {session.completedAt}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                          {session.correctCount}/{questionsPerSession}
-                        </td>
-                        <td className="px-6 py-4 text-sm whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 rounded-full ${
-                              session.accuracy > 90
-                                ? "bg-green-100 text-green-800"
-                                : session.accuracy > 70
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {session.accuracy}%
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                          {session.totalTime}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                          {session.numbersPerMinute}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <PracticeRecordList
+            ref={practiceRecordListRef}
+            questionsPerSession={questionsPerSession}
+            targetNumberLength={targetNumber.length}
+          />
         </div>
       </div>
       <VisitCounter />

@@ -11,6 +11,7 @@ interface UserData {
 
 interface UseAuthReturn {
   userEmail: string | null;
+  userId: number | null;
   userData: UserData | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -89,6 +90,7 @@ export function useAuth(): UseAuthReturn {
 
   return {
     userEmail: userData?.email ?? null,
+    userId: userData?.id ?? null,
     userData,
     isAuthenticated,
     login,
