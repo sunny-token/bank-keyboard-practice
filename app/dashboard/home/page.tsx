@@ -1,7 +1,7 @@
 "use client";
 
+import VisitCounter from "@/app/components/VisitCounter";
 import { useState, useEffect, useCallback, useRef } from "react";
-import VisitCounter from "../components/VisitCounter";
 
 // 新增练习会话接口
 interface PracticeSession {

@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 在这里添加您的数据模型 
+model BankRecord {
+  id           Int      @id @default(autoincrement())
+  completedAt  DateTime @default(now())
+  correctCount Int
+  accuracy     Float
+  duration     Int // 用时（秒）
+  wpm          Float // 字数/分钟
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         UserInfo @relation(fields: [userId], references: [id])
+  userId       Int
+}
+
+model UserInfo {
+  id         Int          @id @default(autoincrement())
+  username   String       @unique
+  email      String       @unique
+  password   String
+  name       String?
+  avatar     String?
+  role       String       @default("user")
+  ip         String?
+  visitCount Int          @default(0)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  records    BankRecord[]
+}
