@@ -1,40 +1,75 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { http } from "@/lib/request";
+import { useAuth } from "@/app/hooks/useAuth";
 
 interface VisitRecord {
   ip: string;
   timestamp: string;
   count: number;
+  location?: string;
+}
+
+interface UserInfo {
+  id: number;
+  ip: string;
+  visitCount: number;
 }
 
 export default function VisitCounter() {
   const [visitInfo, setVisitInfo] = useState<VisitRecord | null>(null);
+  const { userEmail } = useAuth();
 
   useEffect(() => {
-    // 从localStorage获取访问记录
-    const storedInfo = localStorage.getItem("visitInfo");
-    if (storedInfo) {
-      setVisitInfo(JSON.parse(storedInfo));
-    }
-
-    // 获取IP地址
-    fetch("https://api.ipify.org?format=json")
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchAndUpdateVisitInfo = async () => {
+      try {
+        // 获取IP地址
+        const ipResponse = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipResponse.json();
         const now = new Date().toISOString();
+
+        // 获取IP地理位置信息
+        const locationResponse = await fetch(
+          `https://ipapi.co/${ipData.ip}/json/`,
+        );
+        const locationData = await locationResponse.json();
+        const location = `${locationData.country_name} ${locationData.city}`;
+
+        if (userEmail === null) {
+          return;
+        }
+
+        // 先获取数据库中的用户信息
+        const userInfoResponse = await http.get<UserInfo>(
+          `/api/userInfo?email=${userEmail}`,
+        );
+
+        console.log("userInfoResponse:", userInfoResponse);
+
+        // 更新用户访问信息
+        const response = await http.put<UserInfo>(
+          `/api/userInfo?email=${userEmail}`,
+          {
+            ip: ipData.ip,
+            visitCount: { increment: 1 },
+          },
+        );
+
         const newInfo: VisitRecord = {
-          ip: data.ip,
+          ip: ipData.ip,
           timestamp: now,
-          count: storedInfo ? JSON.parse(storedInfo).count + 1 : 1,
+          count: response.visitCount,
+          location: location,
         };
-        localStorage.setItem("visitInfo", JSON.stringify(newInfo));
         setVisitInfo(newInfo);
-      })
-      .catch((error) => {
-        console.error("获取IP地址失败:", error);
-      });
-  }, []);
+      } catch (error) {
+        console.error("获取或更新访问信息失败:", error);
+      }
+    };
+
+    fetchAndUpdateVisitInfo();
+  }, [userEmail]);
 
   if (!visitInfo) {
     return null;
@@ -43,7 +78,7 @@ export default function VisitCounter() {
   return (
     <div className="p-4 mt-8 text-sm text-center text-gray-500 border-t border-gray-200">
       <p>
-        访问IP: {visitInfo.ip} | 访问时间:{" "}
+        访问IP: {visitInfo.ip} | 访问地区: {visitInfo.location} | 访问时间:{" "}
         {new Date(visitInfo.timestamp).toLocaleString()} | 访问次数:{" "}
         {visitInfo.count}
       </p>

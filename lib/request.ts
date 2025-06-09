@@ -14,8 +14,12 @@ export async function request<T>(
 
   // 构建请求头
   const headers = new Headers(options.headers);
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
+  // 自动从 localStorage 获取 token
+  const authToken =
+    token ||
+    (typeof window !== "undefined" ? localStorage.getItem("token") : undefined);
+  if (authToken) {
+    headers.set("Authorization", `Bearer ${authToken}`);
   }
   headers.set("Content-Type", "application/json");
 

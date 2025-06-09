@@ -38,8 +38,12 @@ export class BaseModel<T extends PrismaModels> {
 
   async update<W, D>(where: W, data: D) {
     try {
-      return await prismaService.update(this.model, where, data);
+      await prismaService.connect();
+      const result = await prismaService.update(this.model, where, data);
+      await prismaService.disconnect();
+      return result;
     } catch (error) {
+      await prismaService.disconnect();
       this.handleError("update", error);
     }
   }
@@ -54,16 +58,24 @@ export class BaseModel<T extends PrismaModels> {
 
   async findFirst<W, I = undefined>(where: W, include?: I) {
     try {
-      return await prismaService.findFirst(this.model, where, include);
+      await prismaService.connect();
+      const result = await prismaService.findFirst(this.model, where, include);
+      await prismaService.disconnect();
+      return result;
     } catch (error) {
+      await prismaService.disconnect();
       this.handleError("findFirst", error);
     }
   }
 
   async findMany<O = undefined>(options?: O) {
     try {
-      return await prismaService.findMany(this.model, options);
+      await prismaService.connect();
+      const result = await prismaService.findMany(this.model, options);
+      await prismaService.disconnect();
+      return result;
     } catch (error) {
+      await prismaService.disconnect();
       this.handleError("findMany", error);
     }
   }

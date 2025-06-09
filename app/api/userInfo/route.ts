@@ -9,11 +9,11 @@ export const revalidate = 0;
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const email = searchParams.get("email");
 
-    if (userId) {
+    if (email) {
       // 获取特定用户信息
-      const userInfo = await userInfoModel.getUserInfoByUserId(Number(userId));
+      const userInfo = await userInfoModel.getUserInfoByEmail(email);
       return NextResponse.json(userInfo);
     } else {
       // 获取所有用户信息
@@ -56,25 +56,20 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const email = searchParams.get("email");
     const data = await request.json();
 
-    if (!userId) {
-      return NextResponse.json({ error: "缺少用户ID" }, { status: 400 });
+    if (!email) {
+      return NextResponse.json({ error: "缺少邮箱" }, { status: 400 });
     }
 
     // 检查用户是否存在
-    const existingUser = await userInfoModel.getUserInfoByUserId(
-      Number(userId),
-    );
+    const existingUser = await userInfoModel.getUserInfoByEmail(email);
     if (!existingUser) {
       return NextResponse.json({ error: "用户不存在" }, { status: 404 });
     }
 
-    const updatedUserInfo = await userInfoModel.updateUserInfo(
-      Number(userId),
-      data,
-    );
+    const updatedUserInfo = await userInfoModel.updateUserInfo(email, data);
     return NextResponse.json(updatedUserInfo);
   } catch (error) {
     return NextResponse.json({ error: "更新用户信息失败" }, { status: 500 });
@@ -85,21 +80,19 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const email = searchParams.get("email");
 
-    if (!userId) {
-      return NextResponse.json({ error: "缺少用户ID" }, { status: 400 });
+    if (!email) {
+      return NextResponse.json({ error: "缺少邮箱" }, { status: 400 });
     }
 
     // 检查用户是否存在
-    const existingUser = await userInfoModel.getUserInfoByUserId(
-      Number(userId),
-    );
+    const existingUser = await userInfoModel.getUserInfoByEmail(email);
     if (!existingUser) {
       return NextResponse.json({ error: "用户不存在" }, { status: 404 });
     }
 
-    await userInfoModel.deleteUserInfo(Number(userId));
+    await userInfoModel.deleteUserInfo(email);
     return NextResponse.json({ message: "用户信息删除成功" });
   } catch (error) {
     return NextResponse.json({ error: "删除用户信息失败" }, { status: 500 });

@@ -1,35 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { http } from "@/lib/request";
-
-interface LoginResponse {
-  token: string;
-  id: number;
-  email: string;
-  role: string;
-}
+import { useAuth } from "@/app/hooks/useAuth";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const router = useRouter();
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const userData = await http.post<LoginResponse>("/api/login", {
-        email,
-        password,
-      });
-
-      localStorage.setItem("token", userData.token);
-      localStorage.setItem("userData", JSON.stringify(userData));
-      router.push("/dashboard/home");
+      await login(email, password);
     } catch (err: any) {
       setError(err.message || "登录失败，请稍后重试");
     }

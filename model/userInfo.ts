@@ -6,9 +6,9 @@ export class UserInfoModel extends BaseModel<"userInfo"> {
     super("userInfo");
   }
 
-  // 根据用户ID获取用户信息
-  async getUserInfoByUserId(userId: number) {
-    return this.findFirst({ id: userId });
+  // 根据邮箱获取用户信息
+  async getUserInfoByEmail(email: string) {
+    return this.findFirst({ email });
   }
 
   // 创建用户信息
@@ -17,8 +17,8 @@ export class UserInfoModel extends BaseModel<"userInfo"> {
   }
 
   // 更新用户信息
-  async updateUserInfo(userId: number, data: Prisma.UserInfoUpdateInput) {
-    return this.update({ id: userId }, data);
+  async updateUserInfo(email: string, data: Prisma.UserInfoUpdateInput) {
+    return this.update({ email }, data);
   }
 
   // 获取所有用户信息
@@ -27,8 +27,8 @@ export class UserInfoModel extends BaseModel<"userInfo"> {
   }
 
   // 删除用户信息
-  async deleteUserInfo(userId: number) {
-    return this.deleteMany({ id: userId });
+  async deleteUserInfo(email: string) {
+    return this.deleteMany({ email });
   }
 }
 
