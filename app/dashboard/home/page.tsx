@@ -424,7 +424,7 @@ export default function BankKeypadPractice() {
           />
         </div>
       </div>
-      <VisitCounter />
+      {/* <VisitCounter /> */}
     </div>
   );
 }

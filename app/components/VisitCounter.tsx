@@ -25,8 +25,15 @@ export default function VisitCounter() {
     const fetchAndUpdateVisitInfo = async () => {
       try {
         // 获取IP地址
-        const ipResponse = await fetch("https://api.ipify.org?format=json");
-        const ipData = await ipResponse.json();
+        const ipResponse = await fetch("https://1.1.1.1/cdn-cgi/trace");
+        const ipText = await ipResponse.text();
+        const ipData = {
+          ip:
+            ipText
+              .split("\n")
+              .find((line) => line.startsWith("ip="))
+              ?.split("=")[1] || "unknown",
+        };
         const now = new Date().toISOString();
 
         // 获取IP地理位置信息
