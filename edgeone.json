@@ -1,6 +1,6 @@
 {
   "name": "example-app",
   "buildCommand": "npm run start",
-  "installCommand": "npm install && npm run build",
+  "installCommand": "npm install && prisma generate && npm run build",
   "nodeVersion": "22.11.0"
 }
