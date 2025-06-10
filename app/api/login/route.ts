@@ -2,22 +2,25 @@ import { NextResponse } from "next/server";
 import { userInfoModel } from "@/model/userInfo";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { Prisma } from "@prisma/client";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    const { identifier, password } = await request.json();
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       return NextResponse.json(
-        { error: "邮箱和密码不能为空" },
+        { error: "用户名/邮箱和密码不能为空" },
         { status: 400 },
       );
     }
 
-    // 查找用户
-    const user = await userInfoModel.findFirst({ email });
+    // 查找用户（通过用户名或邮箱）
+    const user = await userInfoModel.findFirst({
+      OR: [{ email: identifier }, { username: identifier }],
+    });
 
     if (!user) {
       return NextResponse.json({ error: "用户不存在" }, { status: 404 });

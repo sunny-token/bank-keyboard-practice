@@ -14,7 +14,7 @@ interface UseAuthReturn {
   userId: number | null;
   userData: UserData | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
   logout: () => void;
   updateUserData: (data: Partial<UserData>) => void;
 }
@@ -45,10 +45,10 @@ export function useAuth(): UseAuthReturn {
 
   // 登录方法
   const login = useCallback(
-    async (email: string, password: string) => {
+    async (identifier: string, password: string) => {
       try {
         const response = await http.post<UserData>("/api/login", {
-          email,
+          identifier,
           password,
         });
 

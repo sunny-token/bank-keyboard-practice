@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/app/hooks/useAuth";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const { login } = useAuth();
@@ -14,7 +14,7 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      await login(email, password);
+      await login(identifier, password);
     } catch (err: any) {
       setError(err.message || "登录失败，请稍后重试");
     }
@@ -34,18 +34,18 @@ export default function Login() {
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div className="-space-y-px rounded-md shadow-sm">
             <div>
-              <label htmlFor="email" className="sr-only">
-                邮箱
+              <label htmlFor="identifier" className="sr-only">
+                用户名/邮箱
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
+                id="identifier"
+                name="identifier"
+                type="text"
                 required
                 className="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-none appearance-none rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="邮箱"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="用户名/邮箱"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
               />
             </div>
             <div>
