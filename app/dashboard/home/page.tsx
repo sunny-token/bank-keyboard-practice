@@ -10,10 +10,11 @@ import { PracticeSession } from "@/app/types/practice";
 import { useAuth } from "@/app/hooks/useAuth";
 
 // 配置变量
+const isTest = false;
 const MIN_LENGTH = 3; // 最小长度
 const MAX_LENGTH = 8; // 最大长度
-const DEFAULT_QUESTIONS_PER_SESSION = 80; // 默认每轮练习题目数
-const DEFAULT_TIME_LIMIT = 5 * 60 * 1000; // 默认5分钟时间限制（毫秒）
+const DEFAULT_QUESTIONS_PER_SESSION = isTest ? 2 : 80; // 默认每轮练习题目数
+const DEFAULT_TIME_LIMIT = isTest ? 30000 : 5 * 60 * 1000; // 默认5分钟时间限制（毫秒）
 
 export default function BankKeypadPractice() {
   const { userId } = useAuth();
@@ -65,19 +66,23 @@ export default function BankKeypadPractice() {
         totalCharacters.current / (totalTime / 60),
       );
 
-      // 只在完成一轮练习时才更新记录
-      if (currentQuestionCount > 0) {
-        // 保存到数据库
-        await http.post("/api/bankRecord", {
-          correctCount,
-          accuracy: sessionAccuracy,
-          duration: totalTime,
-          wpm: numbersPerMinute,
-          userId: userId,
-        });
+      // 只在完成一轮练习且用户已登录时才更新记录
+      if (currentQuestionCount > 0 && userId !== null) {
+        try {
+          // 保存到数据库
+          await http.post("/api/bankRecord", {
+            correctCount,
+            accuracy: sessionAccuracy,
+            duration: totalTime,
+            wpm: numbersPerMinute,
+            userId: userId,
+          });
 
-        // 刷新练习记录列表
-        practiceRecordListRef.current?.refresh();
+          // 刷新练习记录列表
+          practiceRecordListRef.current?.refresh();
+        } catch (error) {
+          console.error("保存练习记录失败:", error);
+        }
       }
 
       // 只停止练习，不重置任何状态
@@ -230,7 +235,7 @@ export default function BankKeypadPractice() {
   }, [handleKeyDown]);
 
   return (
-    <div className="h-screen overflow-y-auto bg-gray-50 sm:px-6 lg:px-8 scrollbar-hide">
+    <div className="h-[calc(100vh-60px)] overflow-y-hidden bg-gray-50 sm:px-6 lg:px-8 scrollbar-hide">
       <div className="flex-1 p-8 mx-auto my-4 overflow-y-hidden bg-white shadow-md rounded-xl">
         <div className="mb-10 text-center">
           <h1 className="mb-2 text-3xl font-bold text-gray-900">

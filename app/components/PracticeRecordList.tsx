@@ -33,7 +33,10 @@ const PracticeRecordList = forwardRef<
   const { userId } = useAuth();
 
   // 计算总页数
-  const totalPages = Math.ceil(totalRecords / ITEMS_PER_PAGE);
+  const totalPages =
+    Math.ceil(totalRecords / ITEMS_PER_PAGE) === 0
+      ? 1
+      : Math.ceil(totalRecords / ITEMS_PER_PAGE);
 
   // 获取练习记录
   const fetchPracticeRecords = useCallback(async () => {

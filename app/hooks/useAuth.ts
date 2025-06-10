@@ -58,7 +58,8 @@ export function useAuth(): UseAuthReturn {
         setUserData(response);
         setIsAuthenticated(true);
 
-        router.push("/dashboard/home");
+        // 使用 window.location.href 强制页面刷新
+        window.location.href = "/dashboard/home";
       } catch (error) {
         console.error("登录失败:", error);
         throw error;
@@ -73,7 +74,9 @@ export function useAuth(): UseAuthReturn {
     localStorage.removeItem("userData");
     setUserData(null);
     setIsAuthenticated(false);
-    router.push("/dashboard/login");
+
+    // 使用 window.location.href 强制页面刷新
+    window.location.href = "/dashboard/login";
   }, [router]);
 
   // 更新用户数据方法
