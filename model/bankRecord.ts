@@ -83,3 +83,4 @@ export class BankRecordModel extends BaseModel<"bankRecord"> {
     return await this.deleteMany({ userId });
   }
 }
+export const bankRecordModel = new BankRecordModel();

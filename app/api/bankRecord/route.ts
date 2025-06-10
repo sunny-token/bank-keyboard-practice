@@ -1,7 +1,5 @@
+import { bankRecordModel } from "@/model/bankRecord";
 import { NextRequest, NextResponse } from "next/server";
-import { BankRecordModel } from "@/model/bankRecord";
-
-const bankRecordModel = new BankRecordModel();
 
 // 创建新的练习记录
 export async function POST(req: NextRequest) {

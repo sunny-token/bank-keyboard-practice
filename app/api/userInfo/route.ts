@@ -2,9 +2,6 @@ import { NextResponse } from "next/server";
 import { userInfoModel } from "@/model/userInfo";
 import { Prisma } from "@prisma/client";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 // GET 请求处理 - 获取用户信息
 export async function GET(request: Request) {
   try {
