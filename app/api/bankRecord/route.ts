@@ -71,21 +71,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "获取记录失败" }, { status: 500 });
   }
 }
-
-// 获取用户的练习统计信息
-export async function GET_STATS(req: NextRequest) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const userId = parseInt(searchParams.get("userId") || "0");
-
-    if (!userId) {
-      return NextResponse.json({ error: "缺少用户ID" }, { status: 400 });
-    }
-
-    const stats = await bankRecordModel.getUserStats(userId);
-    return NextResponse.json(stats);
-  } catch (error) {
-    console.error("获取统计信息失败:", error);
-    return NextResponse.json({ error: "获取统计信息失败" }, { status: 500 });
-  }
-}
