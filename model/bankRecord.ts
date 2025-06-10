@@ -13,6 +13,7 @@ export class BankRecordModel extends BaseModel<"bankRecord"> {
     accuracy: number;
     duration: number;
     wpm: number;
+    totalCount: number;
   }) {
     return await this.create({
       ...data,

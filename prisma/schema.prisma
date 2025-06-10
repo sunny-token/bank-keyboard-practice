@@ -15,6 +15,7 @@ model BankRecord {
   id           Int      @id @default(autoincrement())
   completedAt  DateTime @default(now())
   correctCount Int
+  totalCount   Int
   accuracy     Float
   duration     Int // 用时（秒）
   wpm          Float // 字数/分钟

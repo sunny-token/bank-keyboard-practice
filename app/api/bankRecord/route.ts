@@ -5,14 +5,15 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { correctCount, accuracy, duration, wpm, userId } = body;
+    const { correctCount, accuracy, duration, wpm, userId, totalCount } = body;
 
     if (
       correctCount === null ||
       accuracy === null ||
       duration === null ||
       wpm === null ||
-      userId === null
+      userId === null ||
+      totalCount === null
     ) {
       return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
     }
@@ -23,6 +24,7 @@ export async function POST(req: NextRequest) {
       accuracy,
       duration,
       wpm,
+      totalCount,
     });
 
     return NextResponse.json(record);

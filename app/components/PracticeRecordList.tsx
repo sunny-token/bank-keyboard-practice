@@ -10,7 +10,6 @@ import { PracticeSession, BankRecordResponse } from "@/app/types/practice";
 import { useAuth } from "../hooks/useAuth";
 
 interface PracticeRecordListProps {
-  questionsPerSession: number;
   targetNumberLength: number;
 }
 
@@ -23,7 +22,7 @@ const ITEMS_PER_PAGE = 10; // 每页显示的记录数
 const PracticeRecordList = forwardRef<
   PracticeRecordListRef,
   PracticeRecordListProps
->(({ questionsPerSession, targetNumberLength }, ref) => {
+>(({ targetNumberLength }, ref) => {
   const [practiceSessions, setPracticeSessions] = useState<PracticeSession[]>(
     [],
   );
@@ -56,8 +55,8 @@ const PracticeRecordList = forwardRef<
       if (response.records) {
         setPracticeSessions(
           response.records.map((record: any) => ({
-            totalQuestions: questionsPerSession,
             correctCount: record.correctCount,
+            totalQuestions: record.totalCount,
             totalTime: record.duration,
             accuracy: record.accuracy,
             completedAt: new Date(record.completedAt)
@@ -74,7 +73,7 @@ const PracticeRecordList = forwardRef<
     } finally {
       setIsLoading(false);
     }
-  }, [questionsPerSession, targetNumberLength, userId, currentPage]);
+  }, [targetNumberLength, userId, currentPage]);
 
   useImperativeHandle(ref, () => ({
     refresh: fetchPracticeRecords,
@@ -141,7 +140,7 @@ const PracticeRecordList = forwardRef<
                     {session.completedAt}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                    {session.correctCount}/{questionsPerSession}
+                    {session.correctCount}/{session.totalQuestions}
                   </td>
                   <td className="px-6 py-4 text-sm whitespace-nowrap">
                     <span

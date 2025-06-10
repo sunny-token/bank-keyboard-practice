@@ -76,6 +76,7 @@ export default function BankKeypadPractice() {
             duration: totalTime,
             wpm: numbersPerMinute,
             userId: userId,
+            totalCount: questionsPerSession,
           });
 
           // 刷新练习记录列表
@@ -424,7 +425,6 @@ export default function BankKeypadPractice() {
           {/* 右侧历史记录 */}
           <PracticeRecordList
             ref={practiceRecordListRef}
-            questionsPerSession={questionsPerSession}
             targetNumberLength={targetNumber.length}
           />
         </div>
