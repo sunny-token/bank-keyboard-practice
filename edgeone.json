@@ -1,0 +1,6 @@
+{
+  "name": "example-app",
+  "buildCommand": "next build && next start",
+  "installCommand": "npm install",
+  "nodeVersion": "22.11.0"
+}
