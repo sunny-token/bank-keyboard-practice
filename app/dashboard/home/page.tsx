@@ -155,9 +155,7 @@ export default function BankKeypadPractice() {
       });
 
       // 不直接生成新数字，等待回车
-      setTimeout(() => {
-        setWaitingNext(true);
-      }, 3000);
+      setWaitingNext(true);
     }
   }, [
     inputValue,
