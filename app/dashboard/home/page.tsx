@@ -148,14 +148,16 @@ export default function BankKeypadPractice() {
         if (newCount >= questionsPerSession) {
           setTimeout(() => {
             completeSession(newCorrectCount);
-          }, 3000);
+          }, 500);
           return newCount; // 保持当前计数，不重置
         }
         return newCount;
       });
 
       // 不直接生成新数字，等待回车
-      setWaitingNext(true);
+      setTimeout(() => {
+        setWaitingNext(true);
+      }, 3000);
     }
   }, [
     inputValue,
