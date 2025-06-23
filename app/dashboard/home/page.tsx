@@ -32,12 +32,13 @@ export default function BankKeypadPractice() {
   );
   const [currentQuestionCount, setCurrentQuestionCount] = useState(0);
   const [sessionCorrectCount, setSessionCorrectCount] = useState(0);
-  const totalCharacters = useRef(0); // 改为useRef
+  const totalCharacters = useRef(0);
   const [isRunning, setIsRunning] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const isDone = useRef<boolean>(false);
   const practiceRecordListRef = useRef<PracticeRecordListRef>(null);
   const [waitingNext, setWaitingNext] = useState(false);
+  const [enterTip, setEnterTip] = useState("");
 
   // 生成纯数字练习序列（无小数点）
   const generatePracticeNumber = useCallback(() => {
@@ -124,7 +125,7 @@ export default function BankKeypadPractice() {
 
   // 实时匹配逻辑
   useEffect(() => {
-    if (waitingNext) return; // 等待回车时不处理
+    // 不再设置waitingNext，始终允许修改
     const newStatus = inputValue
       .split("")
       .map((char, i) =>
@@ -134,44 +135,17 @@ export default function BankKeypadPractice() {
       );
     setCharStatus(newStatus);
 
+    // 输入满后显示提示
     if (
       inputValue.length === targetNumber.length &&
       targetNumber &&
       !isDone.current
     ) {
-      const isCorrect = newStatus.every((s) => s === "correct");
-      const newCorrectCount = isCorrect
-        ? sessionCorrectCount + 1
-        : sessionCorrectCount;
-      if (isCorrect) {
-        setSessionCorrectCount((prev) => prev + 1);
-      }
-
-      setCurrentQuestionCount((prev) => {
-        const newCount = prev + 1;
-        if (newCount >= questionsPerSession) {
-          setTimeout(() => {
-            completeSession(newCorrectCount);
-          }, 500);
-          return newCount; // 保持当前计数，不重置
-        }
-        return newCount;
-      });
-
-      // 不直接生成新数字，等待回车
-      setWaitingNext(true);
+      setEnterTip("请按Enter进入下一组");
+    } else {
+      setEnterTip("");
     }
-  }, [
-    inputValue,
-    targetNumber,
-    completeSession,
-    generatePracticeNumber,
-    sessionCorrectCount,
-    currentQuestionCount,
-    isDone.current,
-    questionsPerSession,
-    waitingNext,
-  ]);
+  }, [inputValue, targetNumber, isDone.current]);
 
   // 计时器逻辑
   useEffect(() => {
@@ -203,36 +177,47 @@ export default function BankKeypadPractice() {
         return;
       }
 
-      if (waitingNext) {
-        if (e.key === "Enter") {
-          // 生成新数字，重置输入
-          setTargetNumber(nextNumber);
-          setNextNumber(generatePracticeNumber());
-          setInputValue("");
-          setCharStatus([]);
-          setWaitingNext(false);
+      // 只有输入满且按Enter时才进入下一组
+      if (e.key === "Enter" && inputValue.length === targetNumber.length) {
+        const isCorrect = charStatus.every((s) => s === "correct");
+        if (isCorrect) {
+          setSessionCorrectCount((prev) => prev + 1);
         }
+        setCurrentQuestionCount((prev) => {
+          const newCount = prev + 1;
+          if (newCount >= questionsPerSession) {
+            setTimeout(() => {
+              completeSession(sessionCorrectCount + (isCorrect ? 1 : 0));
+            }, 500);
+          }
+          return newCount;
+        });
+        // 生成新数字，重置输入
+        setTargetNumber(nextNumber);
+        setNextNumber(generatePracticeNumber());
+        setInputValue("");
+        setCharStatus([]);
+        setEnterTip("");
         e.preventDefault();
         return;
       }
 
-      if (inputValue.length >= targetNumber.length || isDone.current) {
-        return;
-      }
       // 只处理数字键和功能键
       if (e.key >= "0" && e.key <= "9") {
-        setInputValue((prev) => prev + e.key);
-        totalCharacters.current += 1; // 更新总字符数
+        if (inputValue.length < targetNumber.length) {
+          setInputValue((prev) => prev + e.key);
+          totalCharacters.current += 1;
+        }
         e.preventDefault();
       } else if (e.key === "Backspace") {
         if (inputValue.length > 0) {
-          totalCharacters.current -= 1; // 删除时减少总字符数
+          totalCharacters.current -= 1;
           setInputValue((prev) => prev.slice(0, -1));
         }
         e.preventDefault();
       } else if (e.key === "Escape" || e.key === "Delete") {
         setInputValue("");
-        totalCharacters.current = 0; // 清空时重置总字符数
+        totalCharacters.current = 0;
         e.preventDefault();
       }
     },
@@ -241,8 +226,12 @@ export default function BankKeypadPractice() {
       targetNumber,
       isRunning,
       togglePractice,
-      waitingNext,
+      nextNumber,
       generatePracticeNumber,
+      charStatus,
+      sessionCorrectCount,
+      questionsPerSession,
+      completeSession,
     ],
   );
 
@@ -406,7 +395,10 @@ export default function BankKeypadPractice() {
             </div>
             {/* 新增：下一组数字显示区 */}
             <div className="mb-8">
-              <h3 className="mb-2 text-lg text-gray-500">下一组数字：</h3>
+              <div className="flex items-center mb-2">
+                <h3 className="text-lg text-gray-500">下一组数字：</h3>
+                <div className="ml-4 text-red-500">{enterTip}</div>
+              </div>
               <div className="p-4 font-mono text-2xl tracking-widest bg-gray-50 rounded shadow-inner text-gray-400">
                 {nextNumber.split("").map((char, i) => (
                   <span key={i} className="inline-block w-8 text-center">
