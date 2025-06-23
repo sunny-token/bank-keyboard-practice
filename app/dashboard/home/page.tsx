@@ -250,14 +250,7 @@ export default function BankKeypadPractice() {
 
   return (
     <div className="h-[calc(100vh-60px)] overflow-y-hidden bg-gray-50 sm:px-6 lg:px-8 scrollbar-hide">
-      <div className="overflow-y-hidden flex-1 p-8 mx-auto my-4 bg-white rounded-xl shadow-md">
-        <div className="mb-10 text-center">
-          <h1 className="mb-2 text-3xl font-bold text-gray-900">
-            银行数字键盘训练系统
-          </h1>
-          <p className="text-gray-600">使用物理键盘输入下方显示的数字序列</p>
-        </div>
-
+      <div className="overflow-y-hidden h-full p-8 mx-auto my-4 bg-white rounded-xl shadow-md">
         <div className="flex gap-8 h-[calc(100vh-280px)]">
           {/* 左侧练习区域 */}
           <div className="flex-1">

@@ -16,7 +16,7 @@ export default function Navbar() {
                 href="/dashboard/home"
                 className="text-xl font-bold text-indigo-600"
               >
-                银行键盘练习
+                银行数字键盘训练系统
               </Link>
             </div>
           </div>
