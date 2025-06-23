@@ -36,6 +36,7 @@ export default function BankKeypadPractice() {
   const inputRef = useRef<HTMLInputElement>(null);
   const isDone = useRef<boolean>(false);
   const practiceRecordListRef = useRef<PracticeRecordListRef>(null);
+  const [waitingNext, setWaitingNext] = useState(false);
 
   // 生成纯数字练习序列（无小数点）
   const generatePracticeNumber = useCallback(() => {
@@ -119,6 +120,7 @@ export default function BankKeypadPractice() {
 
   // 实时匹配逻辑
   useEffect(() => {
+    if (waitingNext) return; // 等待回车时不处理
     const newStatus = inputValue
       .split("")
       .map((char, i) =>
@@ -152,11 +154,8 @@ export default function BankKeypadPractice() {
         return newCount;
       });
 
-      // 直接生成新的目标数字，不暂停
-      const newNumber = generatePracticeNumber();
-      setTargetNumber(newNumber);
-      setInputValue("");
-      setCharStatus([]);
+      // 不直接生成新数字，等待回车
+      setWaitingNext(true);
     }
   }, [
     inputValue,
@@ -167,6 +166,7 @@ export default function BankKeypadPractice() {
     currentQuestionCount,
     isDone.current,
     questionsPerSession,
+    waitingNext,
   ]);
 
   // 计时器逻辑
@@ -199,6 +199,19 @@ export default function BankKeypadPractice() {
         return;
       }
 
+      if (waitingNext) {
+        if (e.key === "Enter") {
+          // 生成新数字，重置输入
+          const newNumber = generatePracticeNumber();
+          setTargetNumber(newNumber);
+          setInputValue("");
+          setCharStatus([]);
+          setWaitingNext(false);
+        }
+        e.preventDefault();
+        return;
+      }
+
       if (inputValue.length >= targetNumber.length || isDone.current) {
         return;
       }
@@ -219,7 +232,14 @@ export default function BankKeypadPractice() {
         e.preventDefault();
       }
     },
-    [inputValue, targetNumber, isRunning, togglePractice],
+    [
+      inputValue,
+      targetNumber,
+      isRunning,
+      togglePractice,
+      waitingNext,
+      generatePracticeNumber,
+    ],
   );
 
   // 自动聚焦输入框
@@ -237,7 +257,7 @@ export default function BankKeypadPractice() {
 
   return (
     <div className="h-[calc(100vh-60px)] overflow-y-hidden bg-gray-50 sm:px-6 lg:px-8 scrollbar-hide">
-      <div className="flex-1 p-8 mx-auto my-4 overflow-y-hidden bg-white shadow-md rounded-xl">
+      <div className="overflow-y-hidden flex-1 p-8 mx-auto my-4 bg-white rounded-xl shadow-md">
         <div className="mb-10 text-center">
           <h1 className="mb-2 text-3xl font-bold text-gray-900">
             银行数字键盘训练系统
@@ -251,29 +271,29 @@ export default function BankKeypadPractice() {
             <div className="flex flex-col justify-center mb-8 space-y-4">
               {/* 第一行 */}
               <div className="flex justify-center space-x-8">
-                <div className="w-32 p-4 rounded-lg bg-blue-50">
+                <div className="p-4 w-32 bg-blue-50 rounded-lg">
                   <p className="mb-1 text-sm text-blue-600">用时</p>
                   <p className="font-mono text-2xl">
                     {(elapsedTime / 1000).toFixed(1)}s
                   </p>
                 </div>
-                <div className="w-32 p-4 rounded-lg bg-green-50">
+                <div className="p-4 w-32 bg-green-50 rounded-lg">
                   <p className="mb-1 text-sm text-green-600">正确题数</p>
                   <p className="font-mono text-2xl">{sessionCorrectCount}</p>
                 </div>
-                <div className="w-32 p-4 rounded-lg bg-purple-50">
+                <div className="p-4 w-32 bg-purple-50 rounded-lg">
                   <p className="mb-1 text-sm text-purple-600">当前进度</p>
                   <p className="font-mono text-2xl">
                     {currentQuestionCount}/{questionsPerSession}
                   </p>
                 </div>
-                <div className="w-32 p-4 rounded-lg bg-yellow-50">
+                <div className="p-4 w-32 bg-yellow-50 rounded-lg">
                   <p className="mb-1 text-sm text-yellow-600">剩余时间</p>
                   <p className="font-mono text-2xl">
                     {Math.max(0, (timeLimit - elapsedTime) / 1000).toFixed(1)}s
                   </p>
                 </div>
-                <div className="w-32 p-4 rounded-lg bg-red-50">
+                <div className="p-4 w-32 bg-red-50 rounded-lg">
                   <p className="mb-1 text-sm text-red-600">总字数</p>
                   <p className="font-mono text-2xl">
                     {totalCharacters.current}
@@ -282,7 +302,7 @@ export default function BankKeypadPractice() {
               </div>
               {/* 第二行 */}
               <div className="flex justify-center space-x-8">
-                <div className="p-4 rounded-lg bg-indigo-50">
+                <div className="p-4 bg-indigo-50 rounded-lg">
                   <p className="mb-1 text-sm text-indigo-600">数字长度设置</p>
                   <div className="flex items-center space-x-2">
                     <div className="flex items-center space-x-1">
@@ -324,7 +344,7 @@ export default function BankKeypadPractice() {
                     </div>
                   </div>
                 </div>
-                <div className="p-4 rounded-lg bg-pink-50">
+                <div className="p-4 bg-pink-50 rounded-lg">
                   <p className="mb-1 text-sm text-pink-600">时间限制(分钟)</p>
                   <input
                     type="number"
@@ -340,7 +360,7 @@ export default function BankKeypadPractice() {
                     className="w-16 px-1 py-0.5 text-sm border rounded border-pink-200 focus:outline-none focus:ring-1 focus:ring-pink-500"
                   />
                 </div>
-                <div className="p-4 rounded-lg bg-green-50">
+                <div className="p-4 bg-green-50 rounded-lg">
                   <p className="mb-1 text-sm text-green-600">题目数量</p>
                   <input
                     type="number"
@@ -370,7 +390,7 @@ export default function BankKeypadPractice() {
                 )}
               </h2>
               <div
-                className="p-6 font-mono text-4xl tracking-widest bg-gray-100 shadow-inner rounded-xl"
+                className="p-6 font-mono text-4xl tracking-widest bg-gray-100 rounded-xl shadow-inner"
                 onClick={() => inputRef.current?.focus()}
               >
                 {targetNumber.split("").map((char, i) => (
@@ -401,7 +421,7 @@ export default function BankKeypadPractice() {
 
               {/* 光标 */}
               {inputValue.length < targetNumber.length && (
-                <span className="inline-block w-2 h-12 ml-1 align-middle bg-gray-800 animate-pulse"></span>
+                <span className="inline-block ml-1 w-2 h-12 align-middle bg-gray-800 animate-pulse"></span>
               )}
 
               {/* 隐藏的输入框（用于获取物理键盘输入） */}
@@ -414,7 +434,7 @@ export default function BankKeypadPractice() {
             </div>
 
             {/* 操作提示 */}
-            <div className="p-4 rounded-lg bg-yellow-50">
+            <div className="p-4 bg-yellow-50 rounded-lg">
               <p className="text-center text-yellow-700">
                 <span className="font-semibold">操作说明：</span>
                 使用键盘数字键输入 | Backspace删除 | Delete清空
