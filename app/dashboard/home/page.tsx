@@ -148,7 +148,7 @@ export default function BankKeypadPractice() {
         if (newCount >= questionsPerSession) {
           setTimeout(() => {
             completeSession(newCorrectCount);
-          }, 500);
+          }, 3000);
           return newCount; // 保持当前计数，不重置
         }
         return newCount;
