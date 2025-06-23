@@ -437,7 +437,7 @@ export default function BankKeypadPractice() {
             <div className="p-4 bg-yellow-50 rounded-lg">
               <p className="text-center text-yellow-700">
                 <span className="font-semibold">操作说明：</span>
-                使用键盘数字键输入 | Backspace删除 | Delete清空
+                按Enter进行下一组数字 | Backspace删除 | Delete清空
               </p>
             </div>
           </div>
