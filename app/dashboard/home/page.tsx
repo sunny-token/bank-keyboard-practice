@@ -19,6 +19,7 @@ const DEFAULT_TIME_LIMIT = isTest ? 30000 : 5 * 60 * 1000; // 默认5分钟时�
 export default function BankKeypadPractice() {
   const { userId } = useAuth();
   const [targetNumber, setTargetNumber] = useState("");
+  const [nextNumber, setNextNumber] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [charStatus, setCharStatus] = useState<("correct" | "wrong")[]>([]);
   const [startTime, setStartTime] = useState(0);
@@ -50,7 +51,9 @@ export default function BankKeypadPractice() {
   // 组件挂载时初始化
   useEffect(() => {
     const newNumber = generatePracticeNumber();
+    const next = generatePracticeNumber();
     setTargetNumber(newNumber);
+    setNextNumber(next);
   }, [generatePracticeNumber]);
 
   // 完成练习会话
@@ -107,6 +110,7 @@ export default function BankKeypadPractice() {
         // 确保在开始练习时生成新的目标数字
         const newNumber = generatePracticeNumber();
         setTargetNumber(newNumber);
+        setNextNumber(generatePracticeNumber());
         setInputValue("");
       } else {
         setStartTime(Date.now() - elapsedTime);
@@ -202,8 +206,8 @@ export default function BankKeypadPractice() {
       if (waitingNext) {
         if (e.key === "Enter") {
           // 生成新数字，重置输入
-          const newNumber = generatePracticeNumber();
-          setTargetNumber(newNumber);
+          setTargetNumber(nextNumber);
+          setNextNumber(generatePracticeNumber());
           setInputValue("");
           setCharStatus([]);
           setWaitingNext(false);
@@ -395,6 +399,17 @@ export default function BankKeypadPractice() {
               >
                 {targetNumber.split("").map((char, i) => (
                   <span key={i} className="inline-block w-12 text-center">
+                    {char}
+                  </span>
+                ))}
+              </div>
+            </div>
+            {/* 新增：下一组数字显示区 */}
+            <div className="mb-8">
+              <h3 className="mb-2 text-lg text-gray-500">下一组数字：</h3>
+              <div className="p-4 font-mono text-2xl tracking-widest bg-gray-50 rounded shadow-inner text-gray-400">
+                {nextNumber.split("").map((char, i) => (
+                  <span key={i} className="inline-block w-8 text-center">
                     {char}
                   </span>
                 ))}
