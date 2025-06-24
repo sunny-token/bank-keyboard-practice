@@ -386,20 +386,6 @@ export default function BankKeypadPractice() {
                 ))}
               </div>
             </div>
-            {/* 新增：下一组数字显示区 */}
-            <div className="mb-8">
-              <div className="flex items-center mb-2">
-                <h3 className="text-lg text-gray-500">下一组数字：</h3>
-                <div className="ml-4 text-red-500">{enterTip}</div>
-              </div>
-              <div className="p-4 font-mono text-2xl tracking-widest bg-gray-50 rounded shadow-inner text-gray-400">
-                {nextNumber.split("").map((char, i) => (
-                  <span key={i} className="inline-block w-8 text-center">
-                    {char}
-                  </span>
-                ))}
-              </div>
-            </div>
 
             {/* 输入反馈区 */}
             <div
@@ -432,7 +418,20 @@ export default function BankKeypadPractice() {
                 autoFocus
               />
             </div>
-
+            {/* 新增：下一组数字显示区 */}
+            <div className="mb-8">
+              <div className="flex items-center mb-2">
+                <h3 className="text-lg text-gray-500">下一组数字：</h3>
+                <div className="ml-4 text-red-500">{enterTip}</div>
+              </div>
+              <div className="p-4 font-mono text-2xl tracking-widest bg-gray-50 rounded shadow-inner text-gray-400">
+                {nextNumber.split("").map((char, i) => (
+                  <span key={i} className="inline-block w-8 text-center">
+                    {char}
+                  </span>
+                ))}
+              </div>
+            </div>
             {/* 操作提示 */}
             <div className="p-4 bg-yellow-50 rounded-lg">
               <p className="text-center text-yellow-700">
