@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       totalCount,
     });
 
-    return NextResponse.json(record);
+    return NextResponse.json({ ...record, code: 200 });
   } catch (error) {
     console.error("创建记录失败:", error);
     return NextResponse.json({ error: "创建记录失败" }, { status: 500 });
@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
         pageSize,
         totalPages: Math.ceil(total / pageSize),
       },
+      code: 200,
     });
   } catch (error) {
     console.error("获取记录失败:", error);

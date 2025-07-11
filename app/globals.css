@@ -120,3 +120,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* 只影响成绩弹窗的外层样式 */
+.custom-result-toast[data-sonner-toast] {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+}
+.custom-result-toast[data-sonner-toast] > div {
+  box-shadow: none !important;
+  background: transparent !important;
+}

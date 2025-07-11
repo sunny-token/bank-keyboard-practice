@@ -15,6 +15,7 @@ export interface BankRecordResponse {
     accuracy: number;
     completedAt: string;
     wpm: number;
+    totalCount?: number;
   }>;
   pagination: {
     total: number;
@@ -22,4 +23,5 @@ export interface BankRecordResponse {
     pageSize: number;
     totalPages: number;
   };
+  code?: number;
 }

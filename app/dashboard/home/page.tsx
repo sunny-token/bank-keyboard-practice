@@ -1,20 +1,18 @@
 "use client";
 
-import VisitCounter from "@/app/components/VisitCounter";
-import PracticeRecordList, {
-  PracticeRecordListRef,
-} from "@/app/components/PracticeRecordList";
+import PracticeRecordList from "@/app/components/PracticeRecordList";
+import type { PracticeRecordListRef } from "@/app/components/PracticeRecordList";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { http } from "@/lib/request";
-import { PracticeSession } from "@/app/types/practice";
 import { useAuth } from "@/app/hooks/useAuth";
+import { showResultToaster } from "@/app/components/ResultToaster";
+import { toast } from "sonner";
 
 // 配置变量
-const isTest = false;
 const MIN_LENGTH = 3; // 最小长度
 const MAX_LENGTH = 8; // 最大长度
-const DEFAULT_QUESTIONS_PER_SESSION = isTest ? 2 : 80; // 默认每轮练习题目数
-const DEFAULT_TIME_LIMIT = isTest ? 30000 : 5 * 60 * 1000; // 默认5分钟时间限制（毫秒）
+const DEFAULT_QUESTIONS_PER_SESSION = 80; // 默认每轮练习题目数
+const DEFAULT_TIME_LIMIT = 5 * 60 * 1000; // 默认5分钟时间限制（毫秒）
 
 export default function BankKeypadPractice() {
   const { userId } = useAuth();
@@ -38,9 +36,9 @@ export default function BankKeypadPractice() {
   const isDone = useRef<boolean>(false);
   const isBlockingInput = useRef(false);
   const practiceRecordListRef = useRef<PracticeRecordListRef>(null);
-  const [waitingNext, setWaitingNext] = useState(false);
   const [enterTip, setEnterTip] = useState("");
 
+  // 新增：成绩弹框 state
   // 生成纯数字练习序列（无小数点）
   const generatePracticeNumber = useCallback(() => {
     const length =
@@ -73,22 +71,33 @@ export default function BankKeypadPractice() {
         totalCharacters.current / (totalTime / 60),
       );
 
+      // 新增：用 sonner 弹框显示成绩
+      showResultToaster({
+        correctCount,
+        accuracy: sessionAccuracy,
+        duration: totalTime,
+        wpm: numbersPerMinute,
+        totalCount: questionsPerSession,
+      });
       // 只在完成一轮练习且用户已登录时才更新记录
       if (currentQuestionCount > 0 && userId !== null) {
         try {
           // 保存到数据库
-          await http.post("/api/bankRecord", {
+          const res = (await http.post("/api/bankRecord", {
             correctCount,
             accuracy: sessionAccuracy,
             duration: totalTime,
             wpm: numbersPerMinute,
             userId: userId,
             totalCount: questionsPerSession,
-          });
-
+          })) as { code: number; message?: string };
+          if (res.code !== 200) {
+            toast.error("保存练习记录失败：" + (res.message || "请稍后重试"));
+          }
           // 刷新练习记录列表
           practiceRecordListRef.current?.refresh();
-        } catch (error) {
+        } catch (error: any) {
+          toast.error("保存练习记录异常：" + (error?.message || "请稍后重试"));
           console.error("保存练习记录失败:", error);
         }
       }
