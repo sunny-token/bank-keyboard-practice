@@ -7,6 +7,7 @@ import { http } from "@/lib/request";
 import { useAuth } from "@/app/hooks/useAuth";
 import { showResultToaster } from "@/app/components/ResultToaster";
 import { toast } from "sonner";
+import { usePracticeSettings } from "@/app/store/practiceSettings";
 
 // 配置变量
 const MIN_LENGTH = 3; // 最小长度
@@ -16,18 +17,14 @@ const DEFAULT_TIME_LIMIT = 5 * 60 * 1000; // 默认5分钟时间限制（毫秒�
 
 export default function BankKeypadPractice() {
   const { userId } = useAuth();
+  const { minLength, maxLength, timeLimit, questionsPerSession } =
+    usePracticeSettings();
   const [targetNumber, setTargetNumber] = useState("");
   const [nextNumber, setNextNumber] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [charStatus, setCharStatus] = useState<("correct" | "wrong")[]>([]);
   const [startTime, setStartTime] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [minLength, setMinLength] = useState(MIN_LENGTH);
-  const [maxLength, setMaxLength] = useState(MAX_LENGTH);
-  const [timeLimit, setTimeLimit] = useState(DEFAULT_TIME_LIMIT);
-  const [questionsPerSession, setQuestionsPerSession] = useState(
-    DEFAULT_QUESTIONS_PER_SESSION,
-  );
   const [currentQuestionCount, setCurrentQuestionCount] = useState(0);
   const [sessionCorrectCount, setSessionCorrectCount] = useState(0);
   const totalCharacters = useRef(0);
@@ -308,83 +305,6 @@ export default function BankKeypadPractice() {
                   <p className="font-mono text-2xl">
                     {totalCharacters.current}
                   </p>
-                </div>
-              </div>
-              {/* 第二行 */}
-              <div className="flex justify-center space-x-8">
-                <div className="p-4 bg-indigo-50 rounded-lg">
-                  <p className="mb-1 text-sm text-indigo-600">数字长度设置</p>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center space-x-1">
-                      <label className="text-xs text-indigo-600">最小:</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max={maxLength}
-                        value={minLength}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value);
-                          if (value > 0 && value <= maxLength) {
-                            setMinLength(value);
-                            const newNumber = generatePracticeNumber();
-                            setTargetNumber(newNumber);
-                          }
-                        }}
-                        className="w-12 px-1 py-0.5 text-sm border rounded border-indigo-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      />
-                    </div>
-                    <span className="text-indigo-600">-</span>
-                    <div className="flex items-center space-x-1">
-                      <label className="text-xs text-indigo-600">最大:</label>
-                      <input
-                        type="number"
-                        min={minLength}
-                        max="20"
-                        value={maxLength}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value);
-                          if (value >= minLength && value <= 20) {
-                            setMaxLength(value);
-                            const newNumber = generatePracticeNumber();
-                            setTargetNumber(newNumber);
-                          }
-                        }}
-                        className="w-12 px-1 py-0.5 text-sm border rounded border-indigo-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 bg-pink-50 rounded-lg">
-                  <p className="mb-1 text-sm text-pink-600">时间限制(分钟)</p>
-                  <input
-                    type="number"
-                    min="1"
-                    max="60"
-                    value={timeLimit / (60 * 1000)}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value);
-                      if (value >= 1 && value <= 60) {
-                        setTimeLimit(value * 60 * 1000);
-                      }
-                    }}
-                    className="w-16 px-1 py-0.5 text-sm border rounded border-pink-200 focus:outline-none focus:ring-1 focus:ring-pink-500"
-                  />
-                </div>
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <p className="mb-1 text-sm text-green-600">题目数量</p>
-                  <input
-                    type="number"
-                    min="1"
-                    max="200"
-                    value={questionsPerSession}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value);
-                      if (value >= 1 && value <= 200) {
-                        setQuestionsPerSession(value);
-                      }
-                    }}
-                    className="w-16 px-1 py-0.5 text-sm border rounded border-green-200 focus:outline-none focus:ring-1 focus:ring-green-500"
-                  />
                 </div>
               </div>
             </div>

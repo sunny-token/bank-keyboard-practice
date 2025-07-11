@@ -44,7 +44,7 @@ export function showResultToaster(result: ResultData) {
     </div>,
     {
       duration: 8000,
-      position: "bottom-center",
+      position: "top-center",
       className: "custom-result-toast",
       closeButton: true,
     },
