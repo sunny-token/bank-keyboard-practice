@@ -36,6 +36,7 @@ export default function BankKeypadPractice() {
   const [isRunning, setIsRunning] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const isDone = useRef<boolean>(false);
+  const isBlockingInput = useRef(false);
   const practiceRecordListRef = useRef<PracticeRecordListRef>(null);
   const [waitingNext, setWaitingNext] = useState(false);
   const [enterTip, setEnterTip] = useState("");
@@ -60,6 +61,7 @@ export default function BankKeypadPractice() {
   // 完成练习会话
   const completeSession = useCallback(
     async (correctCount: number) => {
+      isBlockingInput.current = true;
       // 如果会话已经完成或当前没有进行中的练习，不再记录
       if (isDone.current || !isRunning) return;
       isDone.current = true;
@@ -102,6 +104,7 @@ export default function BankKeypadPractice() {
     if (!isRunning) {
       // 如果当前没有进行中的练习，重置所有状态
       if (isDone.current) {
+        isBlockingInput.current = false;
         setStartTime(Date.now());
         setSessionCorrectCount(0);
         setCurrentQuestionCount(0);
@@ -157,6 +160,7 @@ export default function BankKeypadPractice() {
 
         // 检查是否超过时间限制
         if (currentElapsed >= timeLimit) {
+          isBlockingInput.current = true;
           setTimeout(() => {
             completeSession(sessionCorrectCount);
           }, 500);
@@ -169,6 +173,10 @@ export default function BankKeypadPractice() {
   // 处理键盘输入
   const handleKeyDown = useCallback(
     (e: any) => {
+      if (isBlockingInput.current && !(e.key === "Enter" && !isRunning)) {
+        e.preventDefault();
+        return;
+      }
       if (!isRunning) {
         if (e.key === "Enter") {
           togglePractice();
@@ -179,6 +187,10 @@ export default function BankKeypadPractice() {
 
       // 只有输入满且按Enter时才进入下一组
       if (e.key === "Enter" && inputValue.length === targetNumber.length) {
+        // 如果是最后一题，立即阻断输入
+        if (currentQuestionCount + 1 >= questionsPerSession) {
+          isBlockingInput.current = true;
+        }
         const isCorrect = charStatus.every((s) => s === "correct");
         if (isCorrect) {
           setSessionCorrectCount((prev) => prev + 1);
@@ -232,6 +244,9 @@ export default function BankKeypadPractice() {
       sessionCorrectCount,
       questionsPerSession,
       completeSession,
+      isDone.current,
+      isBlockingInput.current,
+      currentQuestionCount,
     ],
   );
 
