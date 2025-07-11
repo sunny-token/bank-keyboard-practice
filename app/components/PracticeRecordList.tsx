@@ -8,6 +8,30 @@ import {
 import { http } from "@/lib/request";
 import { PracticeSession, BankRecordResponse } from "@/app/types/practice";
 import { useAuth } from "../hooks/useAuth";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "../../components/ui/table";
+import { Badge } from "../../components/ui/badge";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+  PaginationLink,
+} from "../../components/ui/pagination";
 
 interface PracticeRecordListProps {
   targetNumberLength: number;
@@ -90,113 +114,133 @@ const PracticeRecordList = forwardRef<
   };
 
   return (
-    <div className="w-[600px] flex flex-col h-full">
-      <h3 className="mb-4 text-xl font-semibold text-gray-700">练习记录</h3>
-      <div className="flex-1 overflow-y-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="sticky top-0 bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                序号
-              </th>
-              <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                完成时间
-              </th>
-              <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                正确题数
-              </th>
-              <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                正确率
-              </th>
-              <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                用时(秒)
-              </th>
-              <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                字数/分钟
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {isLoading ? (
-              <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
-                    <span>加载中...</span>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              practiceSessions.map((session, index) => (
-                <tr
-                  key={index}
-                  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                >
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
-                    {totalRecords -
-                      ((currentPage - 1) * ITEMS_PER_PAGE + index)}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                    {session.completedAt}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                    {session.correctCount}/{session.totalQuestions}
-                  </td>
-                  <td className="px-6 py-4 text-sm whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 rounded-full ${
-                        session.accuracy > 90
-                          ? "bg-green-100 text-green-800"
-                          : session.accuracy > 70
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {session.accuracy}%
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                    {session.totalTime}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                    {session.numbersPerMinute}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* 分页控件 */}
-      <div className="flex items-center justify-center pb-4 mt-4 space-x-2">
-        <button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1 || isLoading}
-          className={`px-3 py-1 rounded ${
-            currentPage === 1 || isLoading
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-blue-500 text-white hover:bg-blue-600"
-          }`}
-        >
-          上一页
-        </button>
-        <span className="text-gray-600">
-          第 {currentPage} 页 / 共 {totalPages} 页
-        </span>
-        <button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages || isLoading}
-          className={`px-3 py-1 rounded ${
-            currentPage === totalPages || isLoading
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-blue-500 text-white hover:bg-blue-600"
-          }`}
-        >
-          下一页
-        </button>
-      </div>
-    </div>
+    <Card className="w-full max-w-2xl h-full flex flex-col mx-auto">
+      <CardHeader>
+        <CardTitle className="text-xl">练习记录</CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-y-auto">
+        <div className="flex-1">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>序号</TableHead>
+                <TableHead>完成时间</TableHead>
+                <TableHead>正确题数</TableHead>
+                <TableHead>正确率</TableHead>
+                <TableHead>用时(秒)</TableHead>
+                <TableHead>字数/分钟</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+                      <span>加载中...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                practiceSessions.map((session, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      {totalRecords -
+                        ((currentPage - 1) * ITEMS_PER_PAGE + index)}
+                    </TableCell>
+                    <TableCell>{session.completedAt}</TableCell>
+                    <TableCell>
+                      {session.correctCount}/{session.totalQuestions}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          session.accuracy > 90
+                            ? "default"
+                            : session.accuracy > 70
+                            ? "secondary"
+                            : "destructive"
+                        }
+                      >
+                        {session.accuracy}%
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{session.totalTime}</TableCell>
+                    <TableCell>{session.numbersPerMinute}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        {/* 分页控件 */}
+        <div className="flex items-center justify-center pb-4 mt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  aria-disabled={currentPage === 1 || isLoading}
+                  tabIndex={currentPage === 1 || isLoading ? -1 : 0}
+                  className={
+                    currentPage === 1 || isLoading
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                  onClick={(e) => {
+                    if (currentPage === 1 || isLoading) {
+                      e.preventDefault();
+                      return;
+                    }
+                    handlePageChange(currentPage - 1);
+                  }}
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <PaginationItem key={i}>
+                  <PaginationLink
+                    isActive={currentPage === i + 1}
+                    aria-disabled={currentPage === i + 1}
+                    tabIndex={currentPage === i + 1 ? -1 : 0}
+                    className={
+                      currentPage === i + 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                    onClick={(e) => {
+                      if (currentPage === i + 1) {
+                        e.preventDefault();
+                        return;
+                      }
+                      handlePageChange(i + 1);
+                    }}
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  aria-disabled={currentPage === totalPages || isLoading}
+                  tabIndex={currentPage === totalPages || isLoading ? -1 : 0}
+                  className={
+                    currentPage === totalPages || isLoading
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                  onClick={(e) => {
+                    if (currentPage === totalPages || isLoading) {
+                      e.preventDefault();
+                      return;
+                    }
+                    handlePageChange(currentPage + 1);
+                  }}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      </CardContent>
+    </Card>
   );
 });
 

@@ -251,7 +251,7 @@ export default function BankKeypadPractice() {
   return (
     <div className="h-[calc(100vh-60px)] overflow-y-hidden bg-gray-50 sm:px-6 lg:px-8 scrollbar-hide">
       <div className="overflow-y-hidden h-full p-8 mx-auto my-4 bg-white rounded-xl shadow-md">
-        <div className="flex gap-8 h-[calc(100vh-280px)]">
+        <div className="flex gap-8 h-full">
           {/* 左侧练习区域 */}
           <div className="flex-1">
             <div className="flex flex-col justify-center mb-8 space-y-4">
@@ -442,10 +442,12 @@ export default function BankKeypadPractice() {
           </div>
 
           {/* 右侧历史记录 */}
-          <PracticeRecordList
-            ref={practiceRecordListRef}
-            targetNumberLength={targetNumber.length}
-          />
+          <div className="flex-1 flex flex-col">
+            <PracticeRecordList
+              ref={practiceRecordListRef}
+              targetNumberLength={targetNumber.length}
+            />
+          </div>
         </div>
       </div>
       {/* <VisitCounter /> */}

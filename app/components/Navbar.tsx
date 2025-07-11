@@ -2,42 +2,45 @@
 
 import { useAuth } from "@/app/hooks/useAuth";
 import Link from "next/link";
+import {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+} from "../../components/ui/navigation-menu";
+import { Button } from "../../components/ui/button";
 
 export default function Navbar() {
   const { userEmail, logout } = useAuth();
 
   return (
-    <nav className="bg-white shadow">
-      <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex items-center flex-shrink-0">
-              <Link
-                href="/dashboard/home"
-                className="text-xl font-bold text-indigo-600"
-              >
-                银行数字键盘训练系统
-              </Link>
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            {userEmail ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-700">{userEmail}</span>
-                <button
-                  onClick={logout}
-                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  登出
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4"></div>
-            )}
-          </div>
+    <div className="bg-white shadow dark:bg-gray-900 w-full">
+      <div className="flex justify-between h-16 px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center flex-shrink-0">
+          <Link href="/dashboard/home" className="text-xl font-bold">
+            银行数字键盘训练系统
+          </Link>
+        </div>
+        <div className="flex items-center">
+          {userEmail ? (
+            <NavigationMenu>
+              <NavigationMenuList className="flex items-center space-x-4">
+                <NavigationMenuItem>
+                  <span className="text-gray-700 dark:text-gray-200">
+                    {userEmail}
+                  </span>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Button variant="secondary" onClick={logout}>
+                    登出
+                  </Button>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+          ) : (
+            <div className="flex items-center space-x-4"></div>
+          )}
         </div>
       </div>
-    </nav>
+    </div>
   );
 }

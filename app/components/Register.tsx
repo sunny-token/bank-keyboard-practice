@@ -6,6 +6,14 @@ import Link from "next/link";
 import { userInfoModel } from "@/model/userInfo";
 import bcrypt from "bcryptjs";
 import { http } from "@/lib/request";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -54,103 +62,91 @@ export default function Register() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gray-50 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h2 className="mt-6 text-3xl font-extrabold text-center text-gray-900">
-            注册新账号
-          </h2>
-          <p className="mt-2 text-sm text-center text-gray-600">
+    <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gray-50 dark:bg-gray-900 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-3xl text-center">注册新账号</CardTitle>
+          <p className="mt-2 text-sm text-center text-gray-600 dark:text-gray-300">
             创建您的账号以开始练习
           </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleRegister}>
-          <div className="-space-y-px rounded-md shadow-sm">
-            <div>
-              <label htmlFor="username" className="sr-only">
-                用户名
-              </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                required
-                className="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-none appearance-none rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="用户名"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
+        </CardHeader>
+        <CardContent>
+          <form className="space-y-6" onSubmit={handleRegister}>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="username" className="sr-only">
+                  用户名
+                </label>
+                <Input
+                  id="username"
+                  name="username"
+                  type="text"
+                  required
+                  placeholder="用户名"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="email" className="sr-only">
+                  邮箱
+                </label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="邮箱"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="sr-only">
+                  密码
+                </label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  placeholder="密码"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="confirmPassword" className="sr-only">
+                  确认密码
+                </label>
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  required
+                  placeholder="确认密码"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
             </div>
-            <div>
-              <label htmlFor="email" className="sr-only">
-                邮箱
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-none appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="邮箱"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                密码
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-none appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="密码"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="confirmPassword" className="sr-only">
-                确认密码
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                className="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-none appearance-none rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="确认密码"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div className="text-sm text-center text-red-500">{error}</div>
-          )}
-
-          <div>
-            <button
-              type="submit"
-              className="relative flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md group hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
+            {error && (
+              <div className="text-sm text-center text-red-500">{error}</div>
+            )}
+            <Button type="submit" className="w-full">
               注册
-            </button>
-          </div>
-
-          <div className="text-sm text-center">
-            <Link
-              href="/dashboard/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              已有账号？立即登录
-            </Link>
-          </div>
-        </form>
-      </div>
+            </Button>
+            <div className="text-sm text-center">
+              <Link
+                href="/dashboard/login"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                已有账号？立即登录
+              </Link>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
