@@ -15,7 +15,7 @@ export const usePracticeSettings = create<PracticeSettingsState>((set) => ({
   minLength: 3,
   maxLength: 8,
   timeLimit: 5 * 60 * 1000,
-  questionsPerSession: 80,
+  questionsPerSession: 120,
   setMinLength: (v) => set({ minLength: v }),
   setMaxLength: (v) => set({ maxLength: v }),
   setTimeLimit: (v) => set({ timeLimit: v }),

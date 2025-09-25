@@ -368,7 +368,7 @@ export default function BankKeypadPractice() {
                 <h3 className="text-lg text-gray-500">下一组数字：</h3>
                 <div className="ml-4 text-red-500">{enterTip}</div>
               </div>
-              <div className="p-4 font-mono text-2xl tracking-widest bg-gray-50 rounded shadow-inner text-gray-400">
+              <div className="p-4 font-mono text-4xl tracking-widest bg-gray-50 rounded shadow-inner text-gray-400">
                 {nextNumber.split("").map((char, i) => (
                   <span key={i} className="inline-block w-8 text-center">
                     {char}
